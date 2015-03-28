@@ -1,12 +1,16 @@
 #include "Arduino.h"
 #include "ESP8266.h"
 
-#define wifi Serial
+#include "tools/SerialPort.h"
+
+#define wifi USARTDRIVER
 #define SVR_CHAN 1
 #define BCN_CHAN 2
 #define CLI_CHAN 3
-#define BUFFER_SIZE 255
-#define BEACON_PORT 34807
+#define USART_BUFFER 	255
+#define BUFFER_SIZE 	255
+
+SerialPort<0, USART_BUFFER, 0> USARTDRIVER;
 
 enum connectMode {
   CONNECT_MODE_NONE = 0,
@@ -19,12 +23,12 @@ long _baudrate;
 char _ipaddress[15];
 char _broadcast[15];
 int  _port;
-char _device[48];
-char _ssid[48];
-char _password[24];
-bool _beacon;
-long _beaconInterval;
-long _previousMillis;
+//char _device[48];
+//char _ssid[48];			Note: Give just a pointer to an external stored information
+//char _password[24];		Note: Give just a pointer to an external stored information
+//bool _beacon;
+//long _beaconInterval;
+//long _previousMillis;
 int _replyChan;
 DataCallback _dcb;
 ConnectCallback _ccb;
@@ -152,7 +156,6 @@ bool ESP8266::disableBeacon()
 }
 
 
-
 bool ESP8266::send(char *data)
 {
   int chan;
@@ -164,6 +167,7 @@ bool ESP8266::send(char *data)
   return sendData(chan, data);
 }
 
+/*
 void ESP8266::run()
 {
   int v;
@@ -215,7 +219,9 @@ void ESP8266::run()
     sendData(BCN_CHAN, _data);
   }
 }
+*/
 
+/*
 bool ESP8266::startServer(int port, long timeout)
 {
   
@@ -240,7 +246,9 @@ bool ESP8266::startServer(int port, long timeout)
   _connectMode = CONNECT_MODE_SERVER;
   return true;
 }
+*/
 
+/*
 bool ESP8266::startClient(char *ip, int port, long timeout)
 {
   wifi.print(F("AT+CIPSTART="));
@@ -257,12 +265,14 @@ bool ESP8266::startClient(char *ip, int port, long timeout)
   _connectMode = CONNECT_MODE_CLIENT;
   return true;
 }
+*/
 
 char *ESP8266::ip()
 {
   return _ipaddress;
 }
 
+/*
 int ESP8266::scan(char *out, int max)
 {
   int timeout = 10000;
@@ -288,6 +298,7 @@ int ESP8266::scan(char *out, int max)
 
   return count;
 }
+*/
 
 // *****************************************************************************
 // PRIVATE FUNCTIONS BELOW THIS POINT

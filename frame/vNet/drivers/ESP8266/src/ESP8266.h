@@ -59,6 +59,8 @@ class ESP8266
     // informational
     char *ip();
     int scan(char *out, int max);
+	
+	
   private:
     void clearResults();
     bool sendData(int chan, char *data);
