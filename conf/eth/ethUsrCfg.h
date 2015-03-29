@@ -45,6 +45,7 @@
 		ETH_ENC28J60	-  Microchip ENC28J60		(Wired Ethernet)
 		WIFI_MRF24		-  Microchip MRF24WB0MA 	(WiFi  Ethernet) 
 		WIFI_LPT200		-  Authometion HF-LPT200	(WiFi  Ethernet)
+		WIFI_ESP8266	-  ESP8266 Radio			(WiFi  Ethernet)
 */
 /**************************************************************************/
 #ifndef ETH_INSKETCH				
@@ -54,6 +55,7 @@
 #	define ETH_ENC28J60  	0
 #	define WIFI_MRF24		0
 #	define WIFI_LPT200		0
+#	define WIFI_ESP8266		0
 #endif
 /**************************************************************************/
 /*!
@@ -72,7 +74,6 @@
 		vNet Ethernet RAW 		 - Use socket RAW_SOCK
 		vNet UDP/IP       		 - Use sockets UDP_SOCK
 		Server/Client TCP/IP     - Use sockets SRV_SOCK1 and SRV_SOCK2
-		Virtual RAM on W5x00	 - Use socket SRV_SOCK2
 */
 /**************************************************************************/
 #define RAW_SOCK   		0
@@ -110,7 +111,7 @@
     Define the maximum waiting time while a TCP connection is established
 */
 /**************************************************************************/
-#define ETH_WAIT   1000
+#define ETH_WAIT   			1000
 
 /**************************************************************************/
 /*!
@@ -124,8 +125,8 @@
     Useful definition   
 */
 /**************************************************************************/
-#define ETH_FAIL		   0
-#define ETH_SUCCESS		   1
+#define ETH_FAIL			0
+#define ETH_SUCCESS			1
 
 /**************************************************************************/
 /*!
@@ -196,8 +197,8 @@
 /**************************************************************************/
 #ifndef IPCONFIG_INSKETCH
 uint8_t DEFAULT_BASEIPADDRESS[] = {192, 168, 1, 0};
-uint8_t DEFAULT_SUBMASK[] 	  = {255, 255, 255, 0};
-uint8_t DEFAULT_GATEWAY[] 	  = {192, 168, 1, 1};
+uint8_t DEFAULT_SUBMASK[] 		= {255, 255, 255, 0};
+uint8_t DEFAULT_GATEWAY[] 		= {192, 168, 1, 1};
 #endif
 
 /**************************************************************************/

@@ -1,14 +1,46 @@
+/**************************************************************************
+	Souliss - vNet Virtualized Network
+    Copyright (C) 2015  Veseo
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	
+	Originally developed by Steven Sokol
+	Included in vNet by		Dario Di Maio
+***************************************************************************/
+/*!
+    \file 
+    \ingroup
+*/
+/**************************************************************************/
+
 #include "Arduino.h"
 #include "ESP8266.h"
 
-#include "tools/SerialPort.h"
+#include "tools/SerialPort.cpp"
 
-#define wifi USARTDRIVER
-#define SVR_CHAN 1
-#define BCN_CHAN 2
-#define CLI_CHAN 3
-#define USART_BUFFER 	255
-#define BUFFER_SIZE 	255
+#define wifi 			USARTDRIVER
+#define SVR_CHAN 		1
+#define BCN_CHAN 		2
+#define CLI_CHAN 		3
+#define USART_BUFFER 	192
+
+#if (ESP8266_DEBUG)
+	#include <AltSoftSerial.h>
+	extern AltSoftSerial myUSARTDRIVER; // RX, TX
+	
+	#define USART_LOG 	myUSARTDRIVER.print
+#endif
 
 SerialPort<0, USART_BUFFER, 0> USARTDRIVER;
 
@@ -32,12 +64,13 @@ int  _port;
 int _replyChan;
 DataCallback _dcb;
 ConnectCallback _ccb;
-char _wb[BUFFER_SIZE];
+char *_wb;
 int _wctr = 0;
 bool _connected;
 int _connectMode;
 int _debugLevel = 0;
 
+// Constructor
 ESP8266::ESP8266(int mode, long baudrate, int debugLevel)
 {
   _mode = mode;
@@ -47,13 +80,19 @@ ESP8266::ESP8266(int mode, long baudrate, int debugLevel)
   _replyChan = 0;
   memset(_ipaddress, 0, 15);
   memset(_broadcast, 0, 15);
-  memset(_device, 0, 48);
-  memset(_ssid, 0, 48);
-  memset(_password, 0, 24);
-  _beacon = false;
-  _beaconInterval = (10000L);
-  _previousMillis = 0;
+  //memset(_device, 0, 48);
+  //memset(_ssid, 0, 48);
+  //memset(_password, 0, 24);
+  //_beacon = false;
+  //_beaconInterval = (10000L);
+  //_previousMillis = 0;
   _connected = false;
+}
+
+// Use an external buffer for incoming data
+void ESP8266::setBuffer(uint8_t *pointer)
+{
+	_wb = (char*)pointer;
 }
 
 int ESP8266::initializeWifi(DataCallback dcb, ConnectCallback ccb)
@@ -68,7 +107,7 @@ int ESP8266::initializeWifi(DataCallback dcb, ConnectCallback ccb)
   }
   
   wifi.begin(_baudrate);
-  wifi.setTimeout(5000); 
+  //wifi.setTimeout(5000); // The SerialPort doesn't support Timeout option
   
   //delay(500);
   clearResults();
@@ -101,17 +140,18 @@ int ESP8266::initializeWifi(DataCallback dcb, ConnectCallback ccb)
   return WIFI_ERR_NONE;
 }
 
-int ESP8266::connectWifi(char *ssid, char *password)
+// Connect the module to the WiFi network
+int ESP8266::connectWifi()
 {
   
-  strcpy(_ssid, ssid);
-  strcpy(_password, password);
+  //strcpy(_ssid, ssid);
+  //strcpy(_password, password);
   
   // set the access point value and connect
   wifi.print(F("AT+CWJAP=\""));
-  wifi.print(ssid);
+  wifi.print(WiFi_SSID);
   wifi.print(F("\",\""));
-  wifi.print(password);
+  wifi.print(WiFi_Password);
   wifi.println(F("\""));
   delay(100);
   if(!searchResults("OK", 30000, _debugLevel)) {
@@ -132,30 +172,21 @@ int ESP8266::connectWifi(char *ssid, char *password)
   return WIFI_ERR_NONE;
 }
 
-bool ESP8266::disconnectWifi()
+// Start a broadcast channel, all data transmitted on this channel will be UDP/IP
+// broadcast on hard-coded port
+bool ESP8266::startBroadcast()
 {
-  
+	return startUDPChannel(BCN_CHAN, _broadcast, ETH_PORT);
 }
 
-bool ESP8266::enableBeacon(char *device)
+// Send data as UDP/IP on a broadcast address, is assumed that last byte
+// in data is a carriage return
+bool ESP8266::sendBroadcast(U8 *data)
 {
-  // you can only beacon if you're a server
-  if (_connectMode != CONNECT_MODE_SERVER)
-    return false;
-  
-  bool ret;
-  strcpy(_device, device);
-  ret = startUDPChannel(BCN_CHAN, _broadcast, BEACON_PORT);
-  _beacon = ret;
-  return ret;
+	return sendData(BCN_CHAN, data);
 }
 
-bool ESP8266::disableBeacon()
-{
-  _beacon = false;
-}
-
-
+// Send data as TCP/IP on a unicast address
 bool ESP8266::send(char *data)
 {
   int chan;
@@ -167,15 +198,11 @@ bool ESP8266::send(char *data)
   return sendData(chan, data);
 }
 
-/*
+// Process the incoming data
 void ESP8266::run()
 {
-  int v;
-  char _data[255];
-  unsigned long currentMillis = millis();
-  
-  if (currentMillis - _previousMillis < _beaconInterval) {
-    
+  uint8_t v;
+   
     // process wifi messages
     while(wifi.available() > 0) {
       v = wifi.read();
@@ -190,38 +217,10 @@ void ESP8266::run()
         _wctr++;
       }
     }
- 
-  
-  } else {
-    _previousMillis = currentMillis;
-    if (_beacon == false) return;
-    
-    // create message text
-    char *line1 = "{\"event\": \"beacon\", \"ip\": \"";
-    char *line3 = "\", \"port\": ";
-    char *line5 = ", \"device\": \"";
-    char *line7 = "\"}\r\n";
-    
-    // convert port to a string
-    char p[6];
-    itoa(_port, p, 10);
-    
-    // get lenthg of message text
-    memset(_data, 0, 255);
-    strcat(_data, line1);
-    strcat(_data, _ipaddress);
-    strcat(_data, line3);
-    strcat(_data, p);
-    strcat(_data, line5);
-    strcat(_data, _device);
-    strcat(_data, line7);
-    
-    sendData(BCN_CHAN, _data);
   }
 }
-*/
 
-/*
+// Start a TCP server
 bool ESP8266::startServer(int port, long timeout)
 {
   
@@ -246,9 +245,8 @@ bool ESP8266::startServer(int port, long timeout)
   _connectMode = CONNECT_MODE_SERVER;
   return true;
 }
-*/
 
-/*
+// Open a TCP/IP connection
 bool ESP8266::startClient(char *ip, int port, long timeout)
 {
   wifi.print(F("AT+CIPSTART="));
@@ -265,40 +263,12 @@ bool ESP8266::startClient(char *ip, int port, long timeout)
   _connectMode = CONNECT_MODE_CLIENT;
   return true;
 }
-*/
 
+// Return the module IP address
 char *ESP8266::ip()
 {
   return _ipaddress;
 }
-
-/*
-int ESP8266::scan(char *out, int max)
-{
-  int timeout = 10000;
-  int count = 0;
-  int c = 0;
-  
-  if (_debugLevel > 0) {
-    char num[6];
-    itoa(max, num, 10);
-    debug("maximum lenthg of buffer: ");
-    debug(num);
-  }
-  wifi.println(F("AT+CWLAP"));
-  long _startMillis = millis();
-  do {
-    c = wifi.read();
-    if ((c >= 0) && (count < max)) {
-      // add data to list
-      out[count] = c;
-      count++;
-    }
-  } while(millis() - _startMillis < timeout);
-
-  return count;
-}
-*/
 
 // *****************************************************************************
 // PRIVATE FUNCTIONS BELOW THIS POINT
@@ -315,7 +285,7 @@ void ESP8266::processWifiMessage() {
   if(strncmp(_wb, "Link", 5) == 0) {
     
     // reduce the beacon frequency by increasing the interval
-    _beaconInterval = 30000; //false;
+    //_beaconInterval = 30000; //false;
     
     // flag the connection as active
     _connected = true;
@@ -355,6 +325,7 @@ void ESP8266::processWifiMessage() {
   }
 }
 
+// Send the data
 bool ESP8266::sendData(int chan, char *data) {
 
   // start send
@@ -374,6 +345,7 @@ bool ESP8266::sendData(int chan, char *data) {
   return true;
 }
 
+// Set the link mode (single connection, multiple connection)
 bool ESP8266::setLinkMode(int mode) {
   wifi.print(F("AT+CIPMUX="));
   wifi.println(mode);
@@ -384,6 +356,7 @@ bool ESP8266::setLinkMode(int mode) {
   return true;
 }
 
+// Open an UDP channel
 bool ESP8266::startUDPChannel(int chan, char *address, int port) {
   wifi.print(F("AT+CIPSTART="));
   wifi.print(chan);
@@ -439,7 +412,7 @@ bool ESP8266::getIP() {
   return ret;
 }
 
-
+// Starting from the module IP address, get the subnet broadcast address
 bool ESP8266::getBroadcast() {
   
   int i, c, dots = 0;
@@ -463,28 +436,24 @@ bool ESP8266::getBroadcast() {
   return true;
 }
 
-void ESP8266::debug(char *msg) {
-  if (_dcb && (_debugLevel > 0)) {
-    _dcb(msg);
-  } 
-}
-
+// Parse the incoming frame and looks for a target string
 bool ESP8266::searchResults(char *target, long timeout, int dbg)
 {
   int c;
   int index = 0;
   int targetLength = strlen(target);
   int count = 0;
-  char _data[255];
   
+#if (ESP8266_DEBUG)  
+  char _data[255];	// this is a waste of RAM!!!
   memset(_data, 0, 255);
+#endif
 
   long _startMillis = millis();
   do {
     c = wifi.read();
-    
-    if (c >= 0) {
 
+#if (ESP8266_DEBUG)    
       if (dbg > 0) {
         if (count >= 254) {
           debug(_data);
@@ -494,6 +463,7 @@ bool ESP8266::searchResults(char *target, long timeout, int dbg)
         _data[count] = c;
         count++;
       }
+#endif
 
       if (c != target[index])
         index = 0;
@@ -501,19 +471,18 @@ bool ESP8266::searchResults(char *target, long timeout, int dbg)
       if (c == target[index]){
         if(++index >= targetLength){
           if (dbg > 1)
-            debug(_data);
+            USART_LOG(_data);
           return true;
         }
       }
-    }
-  } while(millis() - _startMillis < timeout);
+  } while(wifi.available() && (millis() - _startMillis < timeout));
 
   if (dbg > 0) {
     if (_data[0] == 0) {
-      debug("Failed: No data");
+      USART_LOG("Failed: No data");
     } else {
-      debug("Failed");
-      debug(_data);
+      USART_LOG("Failed");
+      USART_LOG(_data);
     }
   }
   return false;

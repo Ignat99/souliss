@@ -1,16 +1,59 @@
-/*
-    Convenience functions for us with ESP8266 module.
-    
-    Presumes the 8266 is attached to the hardware Serial port on the Arduino
-    
+/**************************************************************************
+	Souliss - vNet Virtualized Network
+    Copyright (C) 2015  Veseo
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	
+	Originally developed by Steven Sokol
+	Included in vNet by		Dario Di Maio
+***************************************************************************/
+/*!
+    \file 
+    \ingroup
 */
+/**************************************************************************/
+#include <stdio.h>
+#include <string.h>
+#include <Arduino.h>
 
-#include <Arduino.h>  // for type definitions
+#ifndef VNET_ESP8266_H
+#define VNET_ESP8266_H
 
-#ifndef ESP8266_h
-#define ESP8266_h
+#include "tools/SerialPort.h"
 
-#include <AltSoftSerial.h>
+/**************************************************************************/
+/*!
+	If enabled print the header and payload of incoming, outgoing and routed
+	frames.
+	
+        Value       Status
+        0x0         Disable (Default)
+        0x1         Enable
+		
+	This enable the Arduino AltSoftSerial library and need an external USB
+	to USART converter (like the one used for programming Arduino Ethernet).
+	
+	In your sketch you should add the following lines
+		[ before setup() ] 	AltSoftSerial myUSARTDRIVER(5, 6);	
+		
+		[in setup()	]		myUSARTDRIVER.begin(9600);
+
+	The TX and RX pins from the external converter shall be reversed, so TX 
+	goes on pin 5 (RX from SoftwareSerial) and RX to 6.
+*/
+/**************************************************************************/
+#define ESP8266_DEBUG  			0
 
 typedef int (*DataCallback)(char *);
 typedef void (*ConnectCallback)(void);
