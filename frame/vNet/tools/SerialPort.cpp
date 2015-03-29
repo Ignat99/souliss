@@ -59,6 +59,15 @@ bool SerialRingBuffer::get(uint8_t* b) {
   return true;
 }
 //------------------------------------------------------------------------------
+/** Move to the next byte and discard data.
+ */
+void SerialRingBuffer::discard() {
+  buf_size_t t = tail_;
+  if (head_ == t) return;
+  t++;
+  tail_ = t < size_ ? t : 0;
+}
+//------------------------------------------------------------------------------
 /**
  * Get the maximum number of contiguous bytes from the ring buffer
  * with one call to memcpy.
@@ -87,6 +96,32 @@ SerialRingBuffer::buf_size_t SerialRingBuffer::get(uint8_t* b, buf_size_t n) {
   t += nr;
   tail_ = t < size_ ? t : t - size_;
   return nr;
+}
+//------------------------------------------------------------------------------
+/**
+ * Read data into the buffer without affecting head and tail, this is used to
+ * inspect an entry frame while receiving is completed.
+ * The buffer is accessed as linear type and i parameter shall never be grater
+ * than the number of available bytes.
+ *
+ * @note This function must not be called with interrupts disabled.
+ *
+ * @param[in] i Index in the buffer.
+ * @return Value in the buffer.
+ */
+uint8_t SerialRingBuffer::inspect(buf_size_t i) {
+  cli();
+  buf_size_t h = head_;
+  sei();
+  buf_size_t t = tail_;
+
+  // Read i-byte in the buffer
+  if((t+i)<size_)
+	return	buf_[t+i];
+  else if((t+i)>size_)
+	return	buf_[size_-t];
+  else
+	return	buf_[0];
 }
 //------------------------------------------------------------------------------
 /** Initialize the ring buffer.
