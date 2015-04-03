@@ -39,7 +39,7 @@
 	#include <AltSoftSerial.h>
 	extern AltSoftSerial myUSARTDRIVER; // RX, TX
 	
-	#define USART_LOG 	myUSARTDRIVER.print
+	#define USART_LOG 	mywifi.print
 #endif
 
 SerialPort<0, USART_BUFFER, 0> USARTDRIVER;
@@ -179,13 +179,6 @@ bool ESP8266::startBroadcast()
 	return startUDPChannel(BCN_CHAN, _broadcast, ETH_PORT);
 }
 
-// Send data as UDP/IP on a broadcast address, is assumed that last byte
-// in data is a carriage return
-bool ESP8266::sendBroadcast(U8 *data)
-{
-	return sendData(BCN_CHAN, data);
-}
-
 // Send data as TCP/IP on a unicast address
 bool ESP8266::send(char *data)
 {
@@ -214,7 +207,12 @@ void ESP8266::run()
         // gndn
       } else {
         _wb[_wctr] = v;
-        _wctr++;
+        if() _wctr++;
+		else
+		{
+			// flush
+			
+		}
       }
     }
   }
@@ -223,7 +221,6 @@ void ESP8266::run()
 // Start a TCP server
 bool ESP8266::startServer(int port, long timeout)
 {
-  
   // cache the port number for the beacon
   _port = port;
   
@@ -336,6 +333,84 @@ bool ESP8266::sendData(int chan, char *data) {
   
   // send the data
   wifi.println(data);
+  
+  delay(50);
+  
+  // to debug only
+  searchResults("OK", 500, _debugLevel);
+  
+  return true;
+}
+
+// Send the data using an oFrame structure
+bool ESP8266::send_vNet(uint16_t addr, oFrame *frame, uint8_t len) {
+	
+	uint8_t i, j, data, plen;
+	uint16_t crc=0xFFFF;
+	
+	// Nothing to send
+	if (len == 0)
+		return USART_FAIL;
+
+	// Start sending the data
+	oFrame_Define(frame);
+	
+	// Define the maximum frame length, total size is  frame_size +
+	// the lenght_as_header + the crc
+	if(oFrame_GetLenght() > USART_MAXPAYLOAD)
+		plen=USART_MAXPAYLOAD;
+	else
+		plen=oFrame_GetLenght();	
+	
+  // start send
+  wifi.print(F("AT+CIPSEND="));
+  wifi.print(BCN_CHAN);
+  wifi.print(",");
+  wifi.println(USART_PREAMBLE_LEN+USART_HEADERLEN+plen+USART_CRCLEN+USART_POSTAMBLE_LEN);
+	
+	// Send the preamble
+	for(i=0; i<USART_PREAMBLE_LEN; i++)
+		wifi.write(USART_PREAMBLE);
+		
+	// Write frame length
+	wifi.write(plen+USART_HEADERLEN+USART_CRCLEN);
+																			
+	while(oFrame_Available() && plen)					// Send the frame	
+	{	
+		// Get the next byte to send
+		data = oFrame_GetByte();
+		
+		// Compute the CRC
+		crc = crc ^ (data);
+		for (j=0; j<8; j++) 
+		{
+			if (crc & 0x0001)
+				crc = (crc >> 1) ^ 0xA001;
+			else
+				crc = crc >> 1;
+		}		
+		
+		// Send byte
+		wifi.write(data);	
+		
+		// Bytes to be sent
+		plen--;	
+	}
+	
+	// This is the CRC
+	crc = (crc << 8  | crc >> 8);
+	
+	// Send the CRC
+	uint8_t* u8crc=((uint8_t*)&crc);			// Cast as byte array
+	wifi.write(u8crc[0]);
+	wifi.write(u8crc[1]);
+	
+	// Send postamble
+	for(i=0; i<USART_POSTAMBLE_LEN; i++)
+		wifi.write(USART_POSTAMBLE);
+	
+	// Remove non processed bytes [if(oFrame_GetLenght() > USART_MAXPAYLOAD)]
+	oFrame_Reset();
   
   delay(50);
   
