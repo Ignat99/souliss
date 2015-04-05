@@ -39,7 +39,7 @@
 	#include <AltSoftSerial.h>
 	extern AltSoftSerial myUSARTDRIVER; // RX, TX
 	
-	#define USART_LOG 	mywifi.print
+	#define USART_LOG 	myUSARTDRIVER.print
 #endif
 
 SerialPort<0, USART_BUFFER, 0> USARTDRIVER;
@@ -50,28 +50,33 @@ enum connectMode {
   CONNECT_MODE_CLIENT
 };
 
-int  _mode;
+uint8_t  _mode;
 long _baudrate;
 char _ipaddress[15];
 char _broadcast[15];
-int  _port;
+uint16_t  _port;
 //char _device[48];
 //char _ssid[48];			Note: Give just a pointer to an external stored information
 //char _password[24];		Note: Give just a pointer to an external stored information
 //bool _beacon;
 //long _beaconInterval;
 //long _previousMillis;
-int _replyChan;
-DataCallback _dcb;
-ConnectCallback _ccb;
+uint8_t _replyChan;
+
+// There are used to flag upper layers for available incoming data
+bool	_dcb;
+uint8_t 	_plen = 0;
+char*	_dpnt;
+
 char *_wb;
-int _wctr = 0;
+uint8_t  _wblen = 0;
+uint8_t _wctr = 0;
 bool _connected;
-int _connectMode;
-int _debugLevel = 0;
+uint8_t _connectMode;
+uint8_t _debugLevel = 0;
 
 // Constructor
-ESP8266::ESP8266(int mode, long baudrate, int debugLevel)
+ESP8266::ESP8266(uint16_t mode, long baudrate, uint16_t debugLevel)
 {
   _mode = mode;
   _baudrate = baudrate;
@@ -90,21 +95,25 @@ ESP8266::ESP8266(int mode, long baudrate, int debugLevel)
 }
 
 // Use an external buffer for incoming data
-void ESP8266::setBuffer(uint8_t *pointer)
+void ESP8266::setBuffer(uint8_t *pointer, uint8_t len)
 {
 	_wb = (char*)pointer;
+	_wblen = len;
 }
 
-int ESP8266::initializeWifi(DataCallback dcb, ConnectCallback ccb)
+// Handle data with upper layers
+bool ESP8266::dataAvailable() 		{return _dcb}
+bool ESP8266::connectionAvailable() {return _connected}
+uint16_t ESP8266::dataRetrieve(char* data_pnt) 		
 {
-  
-  if (dcb) {
-    _dcb = dcb;
-  }
-  
-  if (ccb) {
-    _ccb = ccb; 
-  }
+	data_pnt = _dpnt;	// Transfer the actual pointer where data are stored
+	_dcb=false;			// Remove the data available flag
+	return _plen;		// Return the lenght on the available data
+}
+
+
+uint16_t ESP8266::initializeWifi()
+{
   
   wifi.begin(_baudrate);
   //wifi.setTimeout(5000); // The SerialPort doesn't support Timeout option
@@ -141,7 +150,7 @@ int ESP8266::initializeWifi(DataCallback dcb, ConnectCallback ccb)
 }
 
 // Connect the module to the WiFi network
-int ESP8266::connectWifi()
+uint16_t ESP8266::connectWifi()
 {
   
   //strcpy(_ssid, ssid);
@@ -182,7 +191,7 @@ bool ESP8266::startBroadcast()
 // Send data as TCP/IP on a unicast address
 bool ESP8266::send(char *data)
 {
-  int chan;
+  uint16_t chan;
   if (_connectMode == CONNECT_MODE_SERVER) {
     chan = _replyChan;
   } else {
@@ -190,6 +199,39 @@ bool ESP8266::send(char *data)
   }
   return sendData(chan, data);
 }
+
+// Send the data using an oFrame structure
+uint16_t ESP8266::send_oFrame(oFrame* frame) {
+
+	oFrame_Define(frame);						// Set the frame
+	uint8_t slen = oFrame_GetLenght();			// Get the total length	
+		
+	// start send
+	wifi.print(F("AT+CIPSEND="));
+	wifi.print(BCN_CHAN);
+	wifi.print(",");
+	wifi.println(slen);
+		
+	// Send byte
+	wifi.write(data);	
+
+	// Write up the end of the buffer
+	for(uint8_t i=0;i<slen;i++)
+		if(oFrame_Available())
+			write(dstAddr++, oFrame_GetByte());
+		else
+			break;		
+		
+	// Remove non processed bytes
+	oFrame_Reset();
+  
+	delay(50);
+  
+	// to debug only
+	searchResults("OK", 500, _debugLevel);
+	return true;
+}
+
 
 // Process the incoming data
 void ESP8266::run()
@@ -207,19 +249,17 @@ void ESP8266::run()
         // gndn
       } else {
         _wb[_wctr] = v;
-        if() _wctr++;
-		else
-		{
-			// flush
-			
-		}
+        if(_wctr < _wblen) _wctr++;
+		
+		// if the max length has been exceed, a cut will result in
+		// the frame once processed
       }
     }
   }
 }
 
 // Start a TCP server
-bool ESP8266::startServer(int port, long timeout)
+bool ESP8266::startServer(uint16_t port, long timeout)
 {
   // cache the port number for the beacon
   _port = port;
@@ -244,7 +284,7 @@ bool ESP8266::startServer(int port, long timeout)
 }
 
 // Open a TCP/IP connection
-bool ESP8266::startClient(char *ip, int port, long timeout)
+bool ESP8266::startClient(char *ip, uint16_t port, long timeout)
 {
   wifi.print(F("AT+CIPSTART="));
   wifi.print(CLI_CHAN);
@@ -274,8 +314,8 @@ char *ESP8266::ip()
 // process a complete message from the WiFi side
 // and send the actual data payload to the serial port
 void ESP8266::processWifiMessage() {
-  int packet_len;
-  int channel;
+  uint16_t packet_len;
+  uint16_t channel;
   char *pb;  
   
   // if the message is simply "Link", then we have a live connection
@@ -286,9 +326,7 @@ void ESP8266::processWifiMessage() {
     
     // flag the connection as active
     _connected = true;
-    
-    // if a connection callback is set, call it
-    if (_ccb) _ccb();
+
   } else
   
   // message packet received from the server
@@ -306,11 +344,11 @@ void ESP8266::processWifiMessage() {
       while(*pb!=':') pb++;
       pb++;
       
-      // execute the callback passing a pointer to the message
-      if (_dcb) {
-        _dcb(pb);
-      }
-      
+      // a packet is available, store length and pointer
+      _dcb=true;
+      _plen=packet_len;
+	  _dpnt=pb;
+	  
       // DANGER WILL ROBINSON - there is no ring buffer or other safety net here.
       // the application should either use the data immediately or make a copy of it!
       // do NOT block in the callback or bad things may happen
@@ -323,7 +361,7 @@ void ESP8266::processWifiMessage() {
 }
 
 // Send the data
-bool ESP8266::sendData(int chan, char *data) {
+bool ESP8266::sendData(uint16_t chan, char *data) {
 
   // start send
   wifi.print(F("AT+CIPSEND="));
@@ -342,86 +380,8 @@ bool ESP8266::sendData(int chan, char *data) {
   return true;
 }
 
-// Send the data using an oFrame structure
-bool ESP8266::send_vNet(uint16_t addr, oFrame *frame, uint8_t len) {
-	
-	uint8_t i, j, data, plen;
-	uint16_t crc=0xFFFF;
-	
-	// Nothing to send
-	if (len == 0)
-		return USART_FAIL;
-
-	// Start sending the data
-	oFrame_Define(frame);
-	
-	// Define the maximum frame length, total size is  frame_size +
-	// the lenght_as_header + the crc
-	if(oFrame_GetLenght() > USART_MAXPAYLOAD)
-		plen=USART_MAXPAYLOAD;
-	else
-		plen=oFrame_GetLenght();	
-	
-  // start send
-  wifi.print(F("AT+CIPSEND="));
-  wifi.print(BCN_CHAN);
-  wifi.print(",");
-  wifi.println(USART_PREAMBLE_LEN+USART_HEADERLEN+plen+USART_CRCLEN+USART_POSTAMBLE_LEN);
-	
-	// Send the preamble
-	for(i=0; i<USART_PREAMBLE_LEN; i++)
-		wifi.write(USART_PREAMBLE);
-		
-	// Write frame length
-	wifi.write(plen+USART_HEADERLEN+USART_CRCLEN);
-																			
-	while(oFrame_Available() && plen)					// Send the frame	
-	{	
-		// Get the next byte to send
-		data = oFrame_GetByte();
-		
-		// Compute the CRC
-		crc = crc ^ (data);
-		for (j=0; j<8; j++) 
-		{
-			if (crc & 0x0001)
-				crc = (crc >> 1) ^ 0xA001;
-			else
-				crc = crc >> 1;
-		}		
-		
-		// Send byte
-		wifi.write(data);	
-		
-		// Bytes to be sent
-		plen--;	
-	}
-	
-	// This is the CRC
-	crc = (crc << 8  | crc >> 8);
-	
-	// Send the CRC
-	uint8_t* u8crc=((uint8_t*)&crc);			// Cast as byte array
-	wifi.write(u8crc[0]);
-	wifi.write(u8crc[1]);
-	
-	// Send postamble
-	for(i=0; i<USART_POSTAMBLE_LEN; i++)
-		wifi.write(USART_POSTAMBLE);
-	
-	// Remove non processed bytes [if(oFrame_GetLenght() > USART_MAXPAYLOAD)]
-	oFrame_Reset();
-  
-  delay(50);
-  
-  // to debug only
-  searchResults("OK", 500, _debugLevel);
-  
-  return true;
-}
-
 // Set the link mode (single connection, multiple connection)
-bool ESP8266::setLinkMode(int mode) {
+bool ESP8266::setLinkMode(uint16_t mode) {
   wifi.print(F("AT+CIPMUX="));
   wifi.println(mode);
   delay(500);
@@ -432,7 +392,7 @@ bool ESP8266::setLinkMode(int mode) {
 }
 
 // Open an UDP channel
-bool ESP8266::startUDPChannel(int chan, char *address, int port) {
+bool ESP8266::startUDPChannel(uint16_t chan, char *address, uint16_t port) {
   wifi.print(F("AT+CIPSTART="));
   wifi.print(chan);
   wifi.print(F(",\"UDP\",\""));
@@ -450,7 +410,7 @@ bool ESP8266::getIP() {
   
   char c;
   char buf[15];
-  int dots, ptr = 0;
+  uint16_t dots, ptr = 0;
   bool ret = false;
 
   memset(buf, 0, 15);
@@ -461,10 +421,10 @@ bool ESP8266::getIP() {
     c = wifi.read();
     
     // increment the dot counter if we have a "."
-    if ((int)c == 46) {
+    if ((uint16_t)c == 46) {
       dots++;
     }
-    if ((int)c == 10) {
+    if ((uint16_t)c == 10) {
       // end of a line.
       if ((dots == 3) && (ret == false)) {
         buf[ptr] = 0;
@@ -476,7 +436,7 @@ bool ESP8266::getIP() {
         ptr = 0;
       }
     } else
-    if ((int)c == 13) {
+    if ((uint16_t)c == 13) {
       // ignore it
     } else {
       buf[ptr] = c;
@@ -490,7 +450,7 @@ bool ESP8266::getIP() {
 // Starting from the module IP address, get the subnet broadcast address
 bool ESP8266::getBroadcast() {
   
-  int i, c, dots = 0;
+  uint16_t i, c, dots = 0;
   
   if (strlen(_ipaddress) < 7) {
     return false;
@@ -512,12 +472,12 @@ bool ESP8266::getBroadcast() {
 }
 
 // Parse the incoming frame and looks for a target string
-bool ESP8266::searchResults(char *target, long timeout, int dbg)
+bool ESP8266::searchResults(char *target, long timeout, uint16_t dbg)
 {
-  int c;
-  int index = 0;
-  int targetLength = strlen(target);
-  int count = 0;
+  uint16_t c;
+  uint16_t index = 0;
+  uint16_t targetLength = strlen(target);
+  uint16_t count = 0;
   
 #if (ESP8266_DEBUG)  
   char _data[255];	// this is a waste of RAM!!!

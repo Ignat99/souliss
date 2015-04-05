@@ -55,9 +55,6 @@
 /**************************************************************************/
 #define ESP8266_DEBUG  			0
 
-typedef int (*DataCallback)(char *);
-typedef void (*ConnectCallback)(void);
-
 enum wifiModes {
   WIFI_MODE_STA = 1,
   WIFI_MODE_AP,
@@ -76,44 +73,46 @@ class ESP8266
 {
   public:
     // constructor - set link mode and server port
-    ESP8266(int mode = 1, long baudrate = 9600, int debugLevel = 0);
+    ESP8266(uint16_t mode = 1, long baudrate = 9600, uint16_t debugLevel = 0);
     
     // init / connect / disconnect access point
-    int initializeWifi(DataCallback dcb, ConnectCallback ccb);
-    int connectWifi(char *ssid, char *password);
+    uint16_t initializeWifi(DataCallback dcb, ConnectCallback ccb);
+    uint16_t connectWifi(char *ssid, char *password);
     bool disconnectWifi();
     
     // server
-    bool startServer(int port = 8000, long timeout = 300);
+    bool startServer(uint16_t port = 8000, long timeout = 300);
     
     // client
-    bool startClient(char *ip, int port, long timeout = 300);
+    bool startClient(char *ip, uint16_t port, long timeout = 300);
     
-    // discovery beacon
-    bool enableBeacon(char *device);
-    bool disableBeacon();
-    
+	// data and connection feedback
+	bool dataAvailable(); 			
+	bool connectionAvailable();
+	uint16_t  dataRetrieve(char* data_pnt);
+	
     // send data across the link
     bool send(char *data);
+	uint16_t  send_oFrame(oFrame* frame);
     
     // process wifi messages - MUST be called from main app's loop
     void run();
 
     // informational
     char *ip();
-    int scan(char *out, int max);
+    uint16_t scan(char *out, uint16_t max);
 	
 	
   private:
     void clearResults();
-    bool sendData(int chan, char *data);
-    bool setLinkMode(int mode);
-    bool startUDPChannel(int chan, char *address, int port);
+    bool sendData(uint16_t chan, char *data);
+    bool setLinkMode(uint16_t mode);
+    bool startUDPChannel(uint16_t chan, char *address, uint16_t port);
     void processWifiMessage();
     bool getIP();
     bool getBroadcast();
     void debug(char *msg);
-    bool searchResults(char *target, long timeout, int dbg = 0);
+    bool searchResults(char *target, long timeout, uint16_t dbg = 0);
 };
 
 #endif

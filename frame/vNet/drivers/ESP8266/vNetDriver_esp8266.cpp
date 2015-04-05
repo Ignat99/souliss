@@ -34,6 +34,8 @@ uint8_t usartframe[USART_FRAME_LEN], l=0;
 uint8_t	busstate=USART_BUSBUSY;
 uint16_t myaddress=0;
 
+// Define the wifi module constructor
+ESP8266 esp8266(1,115200,0);
 
 // The name of the class that refers to the USART, change it accordingly to the used device
 #ifndef USARTDRIVER_INSKETCH
@@ -53,7 +55,10 @@ uint16_t myaddress=0;
 /**************************************************************************/
 void vNet_Init_M3()
 {	
-
+	esp8266.setBuffer(usartframe);
+	esp8266.initializeWifi();
+	esp8266.connectWifi();
+	esp8266.startBroadcast();
 }
 
 /**************************************************************************/

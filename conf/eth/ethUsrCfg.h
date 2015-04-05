@@ -64,7 +64,6 @@
 */
 /**************************************************************************/
 #define ETH_PORT   		230					// Port for vNet nodes
-#define USR_PORT   		23000				// Port for vNet user
 #define ETH_HTTP   		80					// Port for HTTP server
 #define ETH_MODBUS 		502					// Port for Modbus server
 
@@ -89,11 +88,9 @@
     User Interface Mode
 	
 	User Interface Mode is an embed functionality in vNet over IP that allow
-	communication with devices that are out of the LAN and/or use two different 
-	port (ETH_PORT, USR_PORT) while writing and receiving vNet frames.
-		
-	Using the User Mode, the entire IP address is stored to allow
-	communication over NAT.
+	communication with devices that are out of the LAN and doesn't use the 
+	vNet addressing schede versus the IP address. Using the User Mode, the 
+	entire IP address is stored to allow communication over NAT.
 	
 	This functionality must be enabled if is required the communication with
 	the Android application or any direct user interface.
