@@ -35,6 +35,8 @@
 #define CLI_CHAN 		3
 #define USART_BUFFER 	192
 
+#define	ESP8266_HEADER	9
+
 #if (ESP8266_DEBUG)
 	#include <AltSoftSerial.h>
 	extern AltSoftSerial myUSARTDRIVER; // RX, TX
@@ -66,7 +68,6 @@ uint8_t _replyChan;
 // There are used to flag upper layers for available incoming data
 bool	_dcb;
 uint8_t 	_plen = 0;
-char*	_dpnt;
 
 char *_wb;
 uint8_t  _wblen = 0;
@@ -106,11 +107,16 @@ bool ESP8266::dataAvailable() 		{return _dcb}
 bool ESP8266::connectionAvailable() {return _connected}
 uint16_t ESP8266::dataRetrieve(char* data_pnt) 		
 {
-	data_pnt = _dpnt;	// Transfer the actual pointer where data are stored
+	data_pnt = _wb;		// Transfer the actual pointer where data are stored
 	_dcb=false;			// Remove the data available flag
 	return _plen;		// Return the lenght on the available data
 }
 
+
+uint16_t ESP8266::releaseData()
+{
+	memmove(_wb, _wb+_plen, _wblen-_plen);
+}
 
 uint16_t ESP8266::initializeWifi()
 {
@@ -241,18 +247,16 @@ void ESP8266::run()
     // process wifi messages
     while(wifi.available() > 0) {
       v = wifi.read();
-      if (v == 10) {
-        _wb[_wctr] = 0;
-        _wctr = 0;
-        processWifiMessage();
-      } else if (v == 13) {
-        // gndn
-      } else {
-        _wb[_wctr] = v;
-        if(_wctr < _wblen) _wctr++;
-		
+	  _wb[_wctr] = v;
+      if(_wctr < _wblen) _wctr++;
+	  else
+	  {
 		// if the max length has been exceed, a cut will result in
-		// the frame once processed
+		// the frame once processed		  
+	  }
+	  
+	  if(_wblen > ESP8266_HEADER) processWifiMessage(_wblen); 
+
       }
     }
   }
@@ -313,10 +317,10 @@ char *ESP8266::ip()
 
 // process a complete message from the WiFi side
 // and send the actual data payload to the serial port
-void ESP8266::processWifiMessage() {
+void ESP8266::processWifiMessage(uint8_t available_bytes) {
   uint16_t packet_len;
   uint16_t channel;
-  char *pb;  
+  uint8_t pb;  
   
   // if the message is simply "Link", then we have a live connection
   if(strncmp(_wb, "Link", 5) == 0) {
@@ -335,24 +339,27 @@ void ESP8266::processWifiMessage() {
     // get the channel and length of the packet
     sscanf(_wb+5, "%d,%d", &channel, &packet_len);
     
-    // cache the channel ID - this is used to reply
-    _replyChan = channel;
-    
-    // if the packet contained data, move the pointer past the header
-    if (packet_len > 0) {
-      pb = _wb+5;
-      while(*pb!=':') pb++;
-      pb++;
-      
-      // a packet is available, store length and pointer
-      _dcb=true;
-      _plen=packet_len;
-	  _dpnt=pb;
-	  
-      // DANGER WILL ROBINSON - there is no ring buffer or other safety net here.
-      // the application should either use the data immediately or make a copy of it!
-      // do NOT block in the callback or bad things may happen
-      
+	if(packet_len+5 <= available_bytes)
+	{
+		// cache the channel ID - this is used to reply
+		_replyChan = channel;
+		
+		// if the packet contained data, move the pointer past the header
+		if ((packet_len > 0) && (packet_len < _wblen)) {
+		  while((*(_wb+5+pb)!=':') && (pb < _wblen)) pb++;
+		  pb++;
+		  
+		  // Remove the header
+		  memmove(_wb, _wb+pb, _wblen-pb);
+		  
+		  // a packet is available, store length and pointer
+		  _dcb=true;
+		  _plen=packet_len;
+		  
+		  // DANGER WILL ROBINSON - there is no ring buffer or other safety net here.
+		  // the application should either use the data immediately or make a copy of it!
+		  // do NOT block in the callback or bad things may happen
+		}	
     }
   } else {
     // other messages might wind up here - some useful, some not.

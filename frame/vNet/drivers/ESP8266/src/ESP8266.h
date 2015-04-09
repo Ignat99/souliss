@@ -108,7 +108,7 @@ class ESP8266
     bool sendData(uint16_t chan, char *data);
     bool setLinkMode(uint16_t mode);
     bool startUDPChannel(uint16_t chan, char *address, uint16_t port);
-    void processWifiMessage();
+    void processWifiMessage(uint8_t available_bytes);
     bool getIP();
     bool getBroadcast();
     void debug(char *msg);
