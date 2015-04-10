@@ -40,10 +40,16 @@
 #endif
 
 // Define ESP8266 useful constants
-#define SVR_CHAN 		1
-#define BCN_CHAN 		2
-#define CLI_CHAN 		3
-#define	ESP8266_HEADER	9
+#define SVR_CHAN 			1
+#define BCN_CHAN 			2
+#define CLI_CHAN 			3
+#define	ESP8266_HEADER		9
+
+#define	WIFI_ERR_AT 		1
+#define	WIFI_ERR_RESET		2
+#define	WIFI_ERR_NONE		3
+#define	WIFI_ERR_CONNECT	4
+#define	WIFI_ERR_LINK		5
 
 enum connectMode {
   CONNECT_MODE_NONE = 0,
@@ -114,8 +120,8 @@ uint16_t ESP8266::initializeWifi()
 	wifi.begin(_baudrate);
   
 	// Some USART drivers doesn't support the Timeout option
-	#if()
-	wifi.setTimeout(5000); 
+	#if(ESP8266_ENTIMEOUT)
+	wifi.setTimeout(ESP8266_TIMEOUT); 
 	#endif
   
 	delay(500);
@@ -482,17 +488,14 @@ bool ESP8266::searchResults(char *target, long timeout, uint16_t dbg)
 		c = wifi.read();
 
 		#if (ESP8266_DEBUG)    
-		if (dbg > 0) 
+		if (count >= 254) 
 		{
-			if (count >= 254) 
-			{
-				debug(_data);
-				memset(_data, 0, 255);
-				count = 0;
-			}
-			_data[count] = c;
-			count++;
+			debug(_data);
+			memset(_data, 0, 255);
+			count = 0;
 		}
+		_data[count] = c;
+		count++;
 		#endif
 
 		if (c != target[index])
@@ -502,23 +505,26 @@ bool ESP8266::searchResults(char *target, long timeout, uint16_t dbg)
 		{
 			if(++index >= targetLength)
 			{
-				if (dbg > 1) USART_LOG(_data);
-			  return true;
+				#if (ESP8266_DEBUG)
+				USART_LOG(_data);
+				#endif
+				
+				return true;
 			}
 		}
 	} 
 	while(wifi.available() && (millis() - _startMillis < timeout));
 
-	if (dbg > 0) 
+	#if (ESP8266_DEBUG)    
+	if (_data[0] == 0) 
+		USART_LOG("Failed: No data");
+	else 
 	{
-		if (_data[0] == 0) 
-			USART_LOG("Failed: No data");
-		else 
-		{
-			USART_LOG("Failed");
-			USART_LOG(_data);
-		}
+		USART_LOG("Failed");
+		USART_LOG(_data);
 	}
+	#endif
+	
 	return false;
 }
 

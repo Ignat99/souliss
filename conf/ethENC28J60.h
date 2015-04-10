@@ -37,6 +37,7 @@
 #define ETH_ENC28J60  				1
 #define WIFI_MRF24					0
 #define WIFI_LPT200					0
+#define WIFI_ESP8266				0
 #define VNET_MEDIA1_ENABLE  		1
 
 #endif

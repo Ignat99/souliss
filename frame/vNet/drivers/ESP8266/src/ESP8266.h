@@ -30,7 +30,25 @@
 #ifndef VNET_ESP8266_H
 #define VNET_ESP8266_H
 
-#include "tools/SerialPort.h"
+/**************************************************************************/
+/*!
+	Set the default baudrate used to communicate with the ESP8266 module
+*/
+/**************************************************************************/
+#ifndef	ESP8266_BAUDRATE_INSKETCH
+#	define	ESP8266_BAUDRATE		9600
+#endif
+/**************************************************************************/
+/*!
+	If enabled set a time-out for the USART
+	
+        Value       Status
+        0x0         Disable 
+        0x1         Enable	(Default)
+*/
+/**************************************************************************/	
+#define	ESP8266_ENTIMEOUT			1
+#define	ESP8266_TIMEOUT				5000
 
 /**************************************************************************/
 /*!
@@ -53,7 +71,7 @@
 	goes on pin 5 (RX from SoftwareSerial) and RX to 6.
 */
 /**************************************************************************/
-#define ESP8266_DEBUG  			0
+#define ESP8266_DEBUG  				0
 
 enum wifiModes {
   WIFI_MODE_STA = 1,
@@ -73,34 +91,35 @@ class ESP8266
 {
   public:
     // constructor - set link mode and server port
-    ESP8266(uint16_t mode = 1, long baudrate = 9600, uint16_t debugLevel = 0);
+    ESP8266(uint16_t mode = 1, long baudrate = ESP8266_BAUDRATE, uint16_t debugLevel = 0);
     
     // init / connect / disconnect access point
-    uint16_t initializeWifi(DataCallback dcb, ConnectCallback ccb);
-    uint16_t connectWifi(char *ssid, char *password);
-    bool disconnectWifi();
+    uint16_t	initializeWifi(DataCallback dcb, ConnectCallback ccb);
+    uint16_t	connectWifi(char *ssid, char *password);
+    bool		disconnectWifi();
     
     // server
-    bool startServer(uint16_t port = 8000, long timeout = 300);
+    bool		startServer(uint16_t port = 8000, long timeout = 300);
     
     // client
-    bool startClient(char *ip, uint16_t port, long timeout = 300);
+    bool		startClient(char *ip, uint16_t port, long timeout = 300);
     
 	// data and connection feedback
-	bool dataAvailable(); 			
-	bool connectionAvailable();
-	uint16_t  dataRetrieve(char* data_pnt);
+	bool 		dataAvailable(); 			
+	bool 		connectionAvailable();
+	uint16_t	dataRetrieve(char* data_pnt);
+	uint16_t 	releaseData()
 	
     // send data across the link
-    bool send(char *data);
-	uint16_t  send_oFrame(oFrame* frame);
+    bool 		send(char *data);
+	uint16_t	send_oFrame(oFrame* frame);
     
-    // process wifi messages - MUST be called from main app's loop
-    void run();
+    // process wifi messages
+    void 		run();
 
     // informational
-    char *ip();
-    uint16_t scan(char *out, uint16_t max);
+    char 		*ip();
+    uint16_t 	scan(char *out, uint16_t max);
 	
 	
   private:

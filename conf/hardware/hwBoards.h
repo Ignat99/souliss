@@ -66,6 +66,7 @@
 		0x06		Nordic nRF24L01 and nRF24L01+
 		0x07		HF-LPT200 with Authometion Souliss firmware
 		0x08		HopeRF RFM69CW/RFM69HCW
+		0x09		Wifi to USART ESP8266 Module
 */
 /**************************************************************************/
 #ifndef COMMS_MODEL_INSKETCH
