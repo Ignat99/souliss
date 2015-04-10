@@ -31,7 +31,12 @@
 #include "src/types.h"
 #include "GetConfig.h"				// need : usartUsrCfg.h
 
+#include "src/ESP8266.h"
+
 #define	USARTBUFFER	192
+
+#define	VNET_M3_HEADER		1
+#define	VNET_M3_APPEND		2
 
 void vNet_Init_M3();
 void vNet_SetAddress_M3(uint16_t addr);

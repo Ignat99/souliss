@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "vNetDriver_esp8266.h"							
+#include "src/ESP8266.cpp"
 
 // Global variables used in the driver
 uint8_t	usartframe[USARTBUFFER];
@@ -46,7 +47,7 @@ oFrame vNetM1_oFrame;
 uint8_t vNetM1_header;
 
 // Define the wifi module constructor
-ESP8266 esp8266();
+ESP8266 esp8266;
 
 /**************************************************************************/
 /*!
@@ -55,7 +56,7 @@ ESP8266 esp8266();
 /**************************************************************************/
 void vNet_Init_M3()
 {	
-	esp8266.setBuffer(usartframe);
+	esp8266.setBuffer(usartframe, USARTBUFFER);
 	esp8266.initializeWifi();
 	esp8266.connectWifi();
 	esp8266.startBroadcast();
@@ -121,8 +122,8 @@ uint8_t vNet_RetrieveData_M3(uint8_t *data)
 	uint8_t *indata;
 	
 	// Get the incoming data
-	uint8_t	inlen = esp8266.dataRetrieve(indata);
-	if(inlen)	memove(data, indata, inlen);
+	uint8_t	inlen = esp8266.dataRetrieve((char*)indata);
+	if(inlen)	memmove(data, indata, inlen);
 	
 	// Remove data from the driver buffer
 	esp8266.releaseData();
@@ -158,7 +159,7 @@ uint8_t vNet_Send_M3(uint16_t addr, oFrame *frame, uint8_t len)
 		oFrame_Reset();		// Free the frame
 		
 		// Restart the socket
-		vNet_Begin_M3();
+		vNet_Init_M3();
 		
 		return ETH_FAIL;	// If data sent fail, return
 	}
@@ -168,4 +169,76 @@ uint8_t vNet_Send_M3(uint16_t addr, oFrame *frame, uint8_t len)
 	oFrame_Reset();		
 		
 	return ETH_SUCCESS;
+}
+
+/**************************************************************************/
+/*!
+    Set the base IP address
+*/
+/**************************************************************************/
+void eth_SetBaseIP(uint8_t *ip_addr)
+{
+}
+
+/**************************************************************************/
+/*!
+    Set the IP address
+*/
+/**************************************************************************/
+void eth_SetIPAddress(uint8_t *ip_addr)
+{
+}
+
+/**************************************************************************/
+/*!
+    Set the Subnet mask
+*/
+/**************************************************************************/
+void eth_SetSubnetMask(uint8_t *submask)
+{
+}
+
+/**************************************************************************/
+/*!
+    Set the Gateway
+*/
+/**************************************************************************/
+void eth_SetGateway(uint8_t *gateway)
+{
+}
+
+/**************************************************************************/
+/*!
+    Get the IP address
+*/
+/**************************************************************************/
+void eth_GetIP(uint8_t *ip_addr)
+{
+}
+
+/**************************************************************************/
+/*!
+    Get the base IP address
+*/
+/**************************************************************************/
+void eth_GetBaseIP(uint8_t *ip_addr)
+{
+}
+
+/**************************************************************************/
+/*!
+    Get the Subnet mask
+*/
+/**************************************************************************/
+void eth_GetSubnetMask(uint8_t *submask)
+{
+}
+
+/**************************************************************************/
+/*!
+    Get the Gateway
+*/
+/**************************************************************************/
+void eth_GetGateway(uint8_t *gateway)
+{	
 }

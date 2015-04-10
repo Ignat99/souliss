@@ -21,6 +21,7 @@
 #include "bconf/StandardArduino.h"			// Use a standard Arduino
 #include "conf/ethW5100.h"					// Ethernet through Wiznet W5100
 #include "conf/Gateway.h"					// The main node is the Gateway, we have just one node
+#include "conf/IPbroadcast.h"				// Enable communication in broadcast mode, used for ESP8266
 
 // Include framework code and libraries
 #include <SPI.h>
@@ -30,8 +31,8 @@
 uint8_t ip_address[4]  = {192, 168, 1, 77};
 uint8_t subnet_mask[4] = {255, 255, 255, 0};
 uint8_t ip_gateway[4]  = {192, 168, 1, 1};
-#define	Gateway_address	77
-#define	Peer_address	78
+#define	Gateway_address	0xAB01
+#define	Peer_address	0xAB02
 #define myvNet_address	ip_address[3]		// The last byte of the IP address (77) is also the vNet address
 #define	myvNet_subnet	0xFF00
 #define	myvNet_supern	Gateway_address
@@ -45,6 +46,7 @@ void setup()
 	
 	// Set network parameters
 	Souliss_SetIPAddress(ip_address, subnet_mask, ip_gateway);
+	Souliss_SetAddress(Gateway_address, myvNet_subnet, myvNet_supern);         	
 	SetAsGateway(myvNet_address);									// Set this node as gateway for SoulissApp	
 
 	SetAsPeerNode(Peer_address, 1);		// Set the peer node 

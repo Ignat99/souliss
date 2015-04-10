@@ -6,20 +6,14 @@
 	available.
 		
 	Run this code on one of the following boards:
-	  - Arduino Ethernet (W5100) 
-	  -	Arduino with Ethernet Shield (W5100)
-	  
-	As option you can run the same code on the following, just changing the
-	relevant configuration file at begin of the sketch
-	  -	Arduino with ENC28J60 Ethernet Shield
-	  - Arduino with W5200 Ethernet Shield
-	  - Arduino with W5500 Ethernet Shield
+	  -	Arduino with ESP8266 Wifi module
 	  
 ***************************************************************************/
 
 // Configure the framework
 #include "bconf/StandardArduino.h"			// Use a standard Arduino
-#include "conf/ethW5100.h"					// Ethernet through Wiznet W5100
+#include "conf/wifiESP8266.h"				// Wifi module ESP8266
+#include "conf/IPbroadcast.h"				// Enable communication in broadcast mode, used for ESP8266
 
 // Include framework code and libraries
 #include <SPI.h>
@@ -29,8 +23,8 @@
 uint8_t ip_address[4]  = {192, 168, 1, 78};
 uint8_t subnet_mask[4] = {255, 255, 255, 0};
 uint8_t ip_gateway[4]  = {192, 168, 1, 1};
-#define	Gateway_address	77
-#define	Peer_address	78
+#define	Gateway_address	0xAB01
+#define	Peer_address	0xAB02
 #define myvNet_address	ip_address[3]		// The last byte of the IP address (77) is also the vNet address
 #define	myvNet_subnet	0xFF00
 #define	myvNet_supern	Gateway_address
@@ -43,7 +37,7 @@ void setup()
 	Initialize();
 	
 	// Set network parameters
-	Souliss_SetIPAddress(ip_address, subnet_mask, ip_gateway);
+	Souliss_SetAddress(Peer_address, myvNet_subnet, myvNet_supern);         	
 
 	Set_SimpleLight(MYLIGHT);			// Define a simple LED light logic
 	

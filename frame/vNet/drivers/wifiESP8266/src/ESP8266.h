@@ -27,8 +27,8 @@
 #include <string.h>
 #include <Arduino.h>
 
-#ifndef VNET_ESP8266_H
-#define VNET_ESP8266_H
+#ifndef _ESP8266_H
+#define _ESP8266_H
 
 /**************************************************************************/
 /*!
@@ -94,22 +94,24 @@ class ESP8266
     ESP8266(uint16_t mode = 1, long baudrate = ESP8266_BAUDRATE, uint16_t debugLevel = 0);
     
     // init / connect / disconnect access point
-    uint16_t	initializeWifi(DataCallback dcb, ConnectCallback ccb);
-    uint16_t	connectWifi(char *ssid, char *password);
+    uint16_t	initializeWifi();
+    uint16_t	connectWifi();
     bool		disconnectWifi();
     void		resetWifi();
+	void		setBuffer(uint8_t *pointer, uint8_t len);
 	
     // server
     bool		startServer(uint16_t port = 8000, long timeout = 300);
     
     // client
     bool		startClient(char *ip, uint16_t port, long timeout = 300);
+	bool		startBroadcast();
     
 	// data and connection feedback
 	uint8_t		dataAvailable(); 			
 	bool 		connectionAvailable();
 	uint16_t	dataRetrieve(char* data_pnt);
-	uint16_t 	releaseData()
+	uint16_t 	releaseData();
 	
     // send data across the link
     bool 		send(char *data);

@@ -96,8 +96,8 @@ void ESP8266::setBuffer(uint8_t *pointer, uint8_t len)
 }
 
 // Handle data with upper layers
-uint8_t ESP8266::dataAvailable() 		{return (uint8_t)_dcb}
-bool ESP8266::connectionAvailable() {return _connected}
+uint8_t ESP8266::dataAvailable() 		{return (uint8_t)_dcb;}
+bool ESP8266::connectionAvailable() {return _connected;}
 
 // Get the pointer of the payload and length
 uint16_t ESP8266::dataRetrieve(char* data_pnt) 		
@@ -210,14 +210,11 @@ uint16_t ESP8266::send_oFrame(oFrame* frame) {
 	wifi.print(BCN_CHAN);
 	wifi.print(",");
 	wifi.println(slen);
-		
-	// Send byte
-	wifi.write(data);	
 
 	// Write up the end of the buffer
 	for(uint8_t i=0;i<slen;i++)
 		if(oFrame_Available())
-			write(dstAddr++, oFrame_GetByte());
+			wifi.write(oFrame_GetByte());
 		else
 			break;		
 		
