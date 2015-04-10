@@ -1,6 +1,6 @@
 /**************************************************************************
 	Souliss - vNet Virtualized Network
-    Copyright (C) 2014  Veseo
+    Copyright (C) 2013  Veseo
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,104 +24,56 @@
 
 */
 /**************************************************************************/
-#ifndef VNET_ETHBRD_H
-#define VNET_ETHBRD_H
+#include <stdio.h>
+#include <string.h>
 
-#include "Arduino.h"
-#include "GetConfig.h"						// need : ethUsrCfg.h
+#include "vNetDriver_esp8266.h"							
 
-#include "vNetDriver_eth.h"
-
-#define	vNet_Init_M3()						vNet_Init_M1()
-#define	vNet_DataAvailable_M3()				vNet_DataAvailable_M1()
-#define	vNet_RetrieveData_M3(data)			vNet_RetrieveData_M1(data)
-
-#define	VNET_M3_HEADER		1
-#define	VNET_M3_APPEND		2
+// Global variables used in the driver
+uint8_t	usartframe[USARTBUFFER];
+uint16_t myaddress=0;
 
 uint16_t vNetM3_address=0;							// Node address for the media
 uint16_t vNetM3_srcaddr=0;							// Node address from incoming frame
 uint8_t  vNetM3_isdata =0;							// Flag if Media3 has incoming data
 oFrame vNetM3_oFrame;								// Data structure for output frame
 
-extern oFrame vNetM1_oFrame;	
-extern uint8_t vNetM1_header;
-extern TCPIP stack;
+// The ESP8266 cannot work with two media at same time as is done
+// for other Ethernet drivers, the refers to M1 frames is just to
+// keep the same naming used in other drivers, but here just M3
+// is implemented
+oFrame vNetM1_oFrame;	
+uint8_t vNetM1_header;
 
-#if (VNET_DEBUG)
-	#define VNET_LOG Serial.print
-#endif
+// Define the wifi module constructor
+ESP8266 esp8266();
+
+/**************************************************************************/
+/*!
+    Init the ESP8266 Module
+*/
+/**************************************************************************/
+void vNet_Init_M3()
+{	
+	esp8266.setBuffer(usartframe);
+	esp8266.initializeWifi();
+	esp8266.connectWifi();
+	esp8266.startBroadcast();
+	esp8266.startServer(ETH_PORT);
+}
 
 /**************************************************************************/
 /*!
 	Set the vNet address and all the network parameters
 */
 /**************************************************************************/
-#if(!VNET_MEDIA1_ENABLE)
-	void vNet_SetAddress_M3(uint16_t addr)
-	{
-		uint8_t ip_addr[4], mac_addr[6];
-		
-		// Locally store the address
-		vNetM3_address=addr;
-		oFrame_Define(&vNetM3_oFrame);
-		oFrame_Set((uint8_t*)(&vNetM3_address), 0, VNET_M3_APPEND, 0, 0);
-		
-		// Translate and set the address
-		eth_vNettoIP(0x00FF, &ip_addr[0]);
-		eth_SetIPAddress(&ip_addr[0]);
-		
-		// Set the MAC Address	
-		#if(AUTO_MAC)
-			eth_vNettoMAC(addr, mac_addr);
-			W5x00.setMACAddress(mac_addr);
-		#else
-			W5x00.setMACAddress((uint8_t*)MAC_ADDRESS);
-		#endif
-		
-		// Set the IP
-		W5x00.setIPAddress(stack.ip);
-		W5x00.setGatewayIp(stack.gateway);
-		W5x00.setSubnetMask(stack.subnetmask);
-		
-		vNet_Begin_M1(UDP_SOCK);								// Start listen on socket
-
-		// Include debug functionalities, if required
-		#if(VNET_DEBUG)
-		uint8_t addrval[6];
-		
-		// Print MAC address 
-		W5x00.getMACAddress(addrval);
-		VNET_LOG("(MAC)<");
-		for(U8 i=0; i<6; i++)
-		{
-			VNET_LOG(addrval[i],HEX);
-			VNET_LOG(",");
-		}
-		VNET_LOG(">\r\n");
-
-		// Print IP address 
-		W5x00.getIPAddress(addrval);
-		VNET_LOG("(IP)<");
-		for(U8 i=0; i<4; i++)
-		{
-			VNET_LOG(addrval[i],HEX);
-			VNET_LOG(",");
-		}
-		
-		VNET_LOG(">\r\n");
-		#endif	
-		
-	}
-#else
-	void vNet_SetAddress_M3(uint16_t addr)
-	{
-		// Locally store the address
-		vNetM3_address=addr;	
-		oFrame_Define(&vNetM3_oFrame);
-		oFrame_Set((uint8_t*)(&vNetM3_address), 0, VNET_M3_APPEND, 0, 0);
-	}
-#endif
+void vNet_SetAddress_M3(uint16_t addr)
+{
+	// Locally store the address
+	vNetM3_address=addr;	
+	oFrame_Define(&vNetM3_oFrame);
+	oFrame_Set((uint8_t*)(&vNetM3_address), 0, VNET_M3_APPEND, 0, 0);
+}
 
 /**************************************************************************/
 /*!
@@ -149,21 +101,40 @@ uint8_t  vNet_hasIncomingData_M3()
 
 /**************************************************************************/
 /*!
+	If data are available store in the temporary buffer
+*/
+/**************************************************************************/
+uint8_t vNet_DataAvailable_M3()
+{
+	// Process the communication and return if there are available data
+	esp8266.run();
+	return esp8266.dataAvailable();
+}
+
+/**************************************************************************/
+/*!
+	Retrieve the complete vNet frame from the incoming buffer
+*/
+/**************************************************************************/
+uint8_t vNet_RetrieveData_M3(uint8_t *data)
+{
+	uint8_t *indata;
+	
+	// Get the incoming data
+	uint8_t	inlen = esp8266.dataRetrieve(indata);
+	if(inlen)	memove(data, indata, inlen);
+	
+	// Remove data from the driver buffer
+	esp8266.releaseData();
+}
+
+/**************************************************************************/
+/*!
 	Send a message via UDP/IP
 */
 /**************************************************************************/
 uint8_t vNet_Send_M3(uint16_t addr, oFrame *frame, uint8_t len)
-{
-	uint8_t ip_addr[4];
-	uint16_t vNet_port;
-	
-	// Define the standard vNet port
-	vNet_port = ETH_PORT;
-	
-	// Set the IP broadcast address
-	for(U8 i=0;i<4;i++)
-		ip_addr[i]=0xFF;
-		
+{	
 	/***
 		Add the whole length as first byte and the node address
 		at the end of the frame
@@ -181,14 +152,13 @@ uint8_t vNet_Send_M3(uint16_t addr, oFrame *frame, uint8_t len)
 	// Append the address as last, this is contained into a dedicated oFrame
 	oFrame_AppendLast(&vNetM3_oFrame);
 	
-	// Send data	
-	if(!sendto(UDP_SOCK, (uint8_t*)&vNetM1_oFrame, 0, &ip_addr[0], vNet_port))
+	// Send data in IP broadcast	
+	if(esp8266.send_oFrame(&vNetM1_oFrame))
 	{
 		oFrame_Reset();		// Free the frame
 		
 		// Restart the socket
-		vNet_Stop_M1(UDP_SOCK);
-		vNet_Begin_M1(UDP_SOCK);
+		vNet_Begin_M3();
 		
 		return ETH_FAIL;	// If data sent fail, return
 	}
@@ -199,5 +169,3 @@ uint8_t vNet_Send_M3(uint16_t addr, oFrame *frame, uint8_t len)
 		
 	return ETH_SUCCESS;
 }
-
-#endif

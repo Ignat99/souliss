@@ -31,40 +31,10 @@
 #include "src/types.h"
 #include "GetConfig.h"				// need : usartUsrCfg.h
 
-#define USART_SUCCESS			0x01
-#define USART_FAIL				0x00
-
-#if(USART_BAUD115k2)
-#	define USART_BAUD			115200			
-#elif(USART_BAUD19k2)
-#	define USART_BAUD			19200
-#elif(USART_BAUD57k6)
-#	define USART_BAUD			57600
-#else
-#	define USART_BAUD			9600
-#endif
-
-#define	USART_HEADERLEN			1
-#define USART_CRCLEN			2
-#define	USART_PREAMBLE			0xAC
-#define	USART_PREAMBLE_LEN		6
-#define	USART_POSTAMBLE			0xCA
-#define	USART_POSTAMBLE_LEN		6
-#define	USART_FRAME_LEN			(3*VNET_MAX_FRAME+USART_PREAMBLE_LEN+USART_POSTAMBLE_LEN+USART_HEADERLEN+USART_CRCLEN+3*USART_TOKEN_LENGHT)
-#define	USART_MAXPAYLOAD		36					// Increasing this value may affect the network stability
-#define USART_TOKEN				0xAA
-#define	USART_TOKEN_LENGHT		3
-#define USART_BYTE_TIME			1					// Time in milliseconds required to transmit a byte at slower baud rate
-#define USART_TOKEN_TIME		(USART_TOKEN_LENGHT*USART_BYTE_TIME)
-#define	USART_MAX_TIME			(USART_MAXPAYLOAD*USART_BYTE_TIME)
-#define	USART_BUSBUSY			0x03
-#define	USART_BUSRECV			0x05
-#define	USART_BUSFREE			0x00
-#define	USART_STARTDELAY		0x03				// Delay in second before node startup
+#define	USARTBUFFER	192
 
 void vNet_Init_M3();
 void vNet_SetAddress_M3(uint16_t addr);
-void vNet_SetCollisionAvoidanceIndex_M3(uint16_t addr, uint16_t submask);
 uint8_t vNet_Send_M3(uint16_t addr, oFrame *frame, uint8_t len);
 uint8_t vNet_DataSize_M3();
 uint8_t vNet_DataAvailable_M3();

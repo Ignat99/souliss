@@ -97,7 +97,8 @@ class ESP8266
     uint16_t	initializeWifi(DataCallback dcb, ConnectCallback ccb);
     uint16_t	connectWifi(char *ssid, char *password);
     bool		disconnectWifi();
-    
+    void		resetWifi();
+	
     // server
     bool		startServer(uint16_t port = 8000, long timeout = 300);
     
@@ -105,7 +106,7 @@ class ESP8266
     bool		startClient(char *ip, uint16_t port, long timeout = 300);
     
 	// data and connection feedback
-	bool 		dataAvailable(); 			
+	uint8_t		dataAvailable(); 			
 	bool 		connectionAvailable();
 	uint16_t	dataRetrieve(char* data_pnt);
 	uint16_t 	releaseData()

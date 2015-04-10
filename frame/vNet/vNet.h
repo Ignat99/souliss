@@ -80,6 +80,10 @@
 			#include "drivers/ethENC28J60/vNetDriver_eth.h"	
 		#endif
 	#endif	
+	
+	#if (WIFI_ESP8266)
+		#include "drivers/wifiESP8266/vNetDriver_esp8266.h"
+	#endif	
 #endif
 	
 #if (VNET_MEDIA5_ENABLE)

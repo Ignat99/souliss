@@ -85,6 +85,10 @@
 	#elif(ETH_ENC28J60)
 		#include "drivers/ethENC28J60/vNetDriver_brd.h"		
 	#endif	
+
+	#if (WIFI_ESP8266)
+		#include "drivers/wifiESP8266/vNetDriver_esp8266.cpp"
+	#endif	
 	
 #endif
 	

@@ -96,7 +96,7 @@ void ESP8266::setBuffer(uint8_t *pointer, uint8_t len)
 }
 
 // Handle data with upper layers
-bool ESP8266::dataAvailable() 		{return _dcb}
+uint8_t ESP8266::dataAvailable() 		{return (uint8_t)_dcb}
 bool ESP8266::connectionAvailable() {return _connected}
 
 // Get the pointer of the payload and length
@@ -248,7 +248,7 @@ void ESP8266::run()
 			// the frame once processed		  
 		}
 	  
-		if(_wblen > ESP8266_HEADER) processWifiMessage(_wblen); 
+		if(_wblen > ESP8266_HEADER) processWifiMessage(_wctr); 
 
     }
 }
@@ -320,6 +320,8 @@ void ESP8266::processWifiMessage(uint8_t available_bytes) {
 		// get the channel and length of the packet
 		sscanf(_wb+5, "%d,%d", &channel, &packet_len);
 		
+		// if the available bytes are at least the payload length plus
+		// the header size
 		if(packet_len+5 <= available_bytes)
 		{
 			// cache the channel ID - this is used to reply
@@ -533,4 +535,8 @@ void ESP8266::clearResults() {
 	while(wifi.available() > 0) {
 		c = wifi.read();
 	}
+}
+
+void ESP8266::resetWifi()	{
+	
 }
