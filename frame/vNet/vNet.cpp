@@ -52,7 +52,12 @@
 	// Driver for MAuthometion HF-LPT200
 	#if (WIFI_LPT200)
 		#include "drivers/ethLPT200/vNetDriver_eth.cpp"	
-	#endif		
+	#endif
+
+	// Driver for ESP8266
+	#if (WIFI_ESP8266)
+		#include "drivers/ethESP8266/vNetDriver_eth.cpp"	
+	#endif			
 #endif
 	
 #if (VNET_MEDIA2_ENABLE)

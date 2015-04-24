@@ -226,7 +226,7 @@ void oFrame_Copy(oFrame *destination, oFrame *source)
 /**************************************************************************/
 #if(VNET_DEBUG)
 void oFrame_Debug()
-{
+{/*
 	oFrame* frame = actualframe;
 	
 	// While the frame pointer is not null
@@ -244,7 +244,7 @@ void oFrame_Debug()
 		oFRAME_LOG((U16)frame->next,HEX);		
 		oFRAME_LOG("\r\n");
 		frame = (oFrame*)frame->next;					// Move to next frame
-	}	
+	}*/	
 
 }
 #endif

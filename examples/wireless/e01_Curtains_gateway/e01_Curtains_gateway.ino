@@ -21,18 +21,28 @@
 ***************************************************************************/
 
 // Configure the framework
-#include "bconf/Chibiduino_v1.h"			// Use a Chibiduino 2.4 GHz wireless board
-#include "conf/ethW5100.h"					// Ethernet through Wiznet W5100
+//#include "bconf/Chibiduino_v1.h"			// Use a Chibiduino 2.4 GHz wireless board
+//#include "conf/ethW5100.h"
+#include "bconf/StandardArduino.h"			// Use a standard Arduino
+#include "bconf/ESP8266.h"
+#include <ESP8266WiFi.h>
+
+const char* ssid = "tomby";
+const char* password = "temporale";					// Ethernet through Wiznet W5100
 #include "conf/Gateway.h"					// The main node is the Gateway
 
+IPAddress ip(192, 168, 0, 17);
+IPAddress gateway(192, 168, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
+
 // Include framework code and libraries
-#include <SPI.h>
+//#include <SPI.h>
 #include "Souliss.h"
 
 // Define the network configuration according to your router settings
-uint8_t ip_address[4]  = {192, 168, 1, 77};
+uint8_t ip_address[4]  = {192, 168, 0, 150};
 uint8_t subnet_mask[4] = {255, 255, 255, 0};
-uint8_t ip_gateway[4]  = {192, 168, 1, 1};
+uint8_t ip_gateway[4]  = {192, 168, 0, 1};
 #define	Gateway_address	0x6501				// The Gateway node has two address, one on the Ethernet side
 											// and the other on the wireless one
 #define	Peer_address	0x6502
@@ -45,6 +55,18 @@ uint8_t ip_gateway[4]  = {192, 168, 1, 1};
 
 void setup()
 {
+  
+   WiFi.config(ip, gateway, subnet);
+    
+      WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  
 	Initialize();
 	
 	// Set network parameters
@@ -53,7 +75,7 @@ void setup()
 	Souliss_SetAddress(Gateway_address, myvNet_subnet, myvNet_supern);					// Address on the wireless interface	
 
 	// This node as gateway will get data from the Peer
-	SetAsPeerNode(Peer_address, 1);	
+	//SetAsPeerNode(Peer_address, 1);	
 }
 
 void loop()

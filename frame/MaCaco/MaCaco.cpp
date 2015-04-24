@@ -41,7 +41,7 @@ oFrame MacacoUserMode_oFrame;						// Data structure for output frame (data from
 
 // store incoming subscription state
 U16 subscr_addr[MaCaco_INMAXSUBSCR] = {0x0000};	
-U8* subscr_putin[MaCaco_INMAXSUBSCR] = {0x0000};
+U16 subscr_putin[MaCaco_INMAXSUBSCR] = {0x0000};
 U8 subscr_startoffset[MaCaco_INMAXSUBSCR] = {0x00};
 U8 subscr_numberof[MaCaco_INMAXSUBSCR] = {0x00};
 U8 subscr_funcode[MaCaco_INMAXSUBSCR] = {0x00};
@@ -58,7 +58,7 @@ U8 subscr_count[MaCaco_OUTMAXSUBSCR] = {0x00};
 // store incoming typical logic request
 U16 reqtyp_addr = 0x0000;	
 U16 lasttyp_addr = 0x0000;
-U8* reqtyp_putin = 0x0000;
+U16 reqtyp_putin = 0x0000;
 U8 reqtyp_startoffset = 0x00;
 U8 reqtyp_numberof = 0x00;
 U8 reqtyp_times = 0;
@@ -176,7 +176,7 @@ U8 MaCaco_parse(MaCaco_rx_data_t *rx)
 	func = rx->funcode;
 	
 	// Read the value as 16 bit and convert it to pointer for an 8 bit variable
-	rx->putin = (U8 *)(*(U16 *)data_ptr);	// Put in...
+	rx->putin = *(U16*)data_ptr;	// Put in...
 	data_ptr += sizeof(U16);
 	
 	rx->startoffset = *data_ptr++;			// Start offset
@@ -211,7 +211,7 @@ U8 MaCaco_parse(MaCaco_rx_data_t *rx)
     Build frame and write to destination device, it use the oFrame structure
 */
 /**************************************************************************/
-U8 MaCaco_send(U16 addr, U8 funcode, U8 *putin, U8 startoffset, U8 numberof, U8 *data)
+U8 MaCaco_send(U16 addr, U8 funcode, U16 putin, U8 startoffset, U8 numberof, U8 *data)
 {
 	U8 *frame_pnt, *data_pnt, status;
 	
@@ -222,7 +222,7 @@ U8 MaCaco_send(U16 addr, U8 funcode, U8 *putin, U8 startoffset, U8 numberof, U8 
 	*frame_pnt++ = funcode;
 	
 	// Read the value as 16 bit and convert the pointer for an 16 bit variable
-	*(U16 *)frame_pnt = (U16) putin;
+	*(U16 *)frame_pnt = putin;
 	frame_pnt += sizeof(U16);
 	
 	*frame_pnt++ = startoffset;	
@@ -255,7 +255,7 @@ U8 MaCaco_send(U16 addr, U8 funcode, U8 *putin, U8 startoffset, U8 numberof, U8 
 	it use the oFrame structure
 */
 /**************************************************************************/
-U8 MaCacoUserMode_send(U16 addr, U8 funcode, U8 *putin, U8 startoffset, U8 numberof, U8 l_numberof, U8 u_numberof, U8 *l_data, U8 *u_data)
+U8 MaCacoUserMode_send(U16 addr, U8 funcode, U16 putin, U8 startoffset, U8 numberof, U8 l_numberof, U8 u_numberof, U8 *l_data, U8 *u_data)
 {
 	U8 *frame_pnt, *l_data_pnt, *u_data_pnt, status;
 	
@@ -267,7 +267,7 @@ U8 MaCacoUserMode_send(U16 addr, U8 funcode, U8 *putin, U8 startoffset, U8 numbe
 	*frame_pnt++ = funcode;
 	
 	// Read the value as 16 bit and convert the pointer for an 16 bit variable
-	*(U16 *)frame_pnt = (U16) putin;
+	*(U16 *)frame_pnt = putin;
 	frame_pnt += sizeof(U16);
 	
 	*frame_pnt++ = startoffset;	
@@ -511,7 +511,7 @@ U8 MaCaco_peruse(U16 addr, MaCaco_rx_data_t *rx, U8 *memory_map)
 			
 		// if the join request is from a nodes that previously got an address, flag the
 		// request as completed
-		if (randomkeyid == (U16)rx->putin)	// identify the node from the keyval
+		if (randomkeyid == rx->putin)	// identify the node from the keyval
 			randomkeyid = 0;
 		else
 		{
@@ -793,7 +793,7 @@ U8 MaCaco_peruse(U16 addr, MaCaco_rx_data_t *rx, U8 *memory_map)
 				U8*	confparameters_p = (memory_map + MaCaco_QUEUE_s);
 					
 				// store the putin value, this is the action message identifier
-				(*(U16 *)confparameters_p) = (U16)rx->putin;
+				(*(U16 *)confparameters_p) = rx->putin;
 				confparameters_p += sizeof(U16);
 					
 				// store the startoffset and numberof values
@@ -981,10 +981,12 @@ U8 MaCaco_peruse(U16 addr, MaCaco_rx_data_t *rx, U8 *memory_map)
 			else	// This flag data subscribed for local use
 			#endif
 			{
+				/*
 				if ((rx->putin >= &memory_map[MaCaco_WRITE_s] && rx->putin <= &memory_map[MaCaco_WRITE_f]) && (rx->numberof > 0))				
 					memmove(rx->putin, rx->data, rx->numberof); // data collected in putin address
 				else
 					return MaCaco_FUNCODE_ERR;				
+				*/
 			}			
 				
 			return MaCaco_FUNCODE_OK;
@@ -993,10 +995,11 @@ U8 MaCaco_peruse(U16 addr, MaCaco_rx_data_t *rx, U8 *memory_map)
 		
 		// All others functional codes
 		default :
+		/*
 			if ((rx->putin >= &memory_map[MaCaco_WRITE_s] && rx->putin <= &memory_map[MaCaco_WRITE_f]) && (rx->numberof > 0))				
 				memmove(rx->putin, rx->data, rx->numberof); // data collected in putin address			
 			return MaCaco_FUNCODE_OK;
-			
+		*/	
 		break;
 		}	
 	}
@@ -1296,7 +1299,7 @@ void MaCaco_reset_lastaddr()
 */
 /**************************************************************************/
 #if(MaCaco_SUBSCRIBERS)
-U8 MaCaco_subscribe(U16 addr, U8 *memory_map, U8 *putin, U8 startoffset, U8 numberof, U8 subscr_chnl)
+U8 MaCaco_subscribe(U16 addr, U8 *memory_map, U16 putin, U8 startoffset, U8 numberof, U8 subscr_chnl)
 {
 	U8 *healthy, *count = 0;
 	
@@ -1423,7 +1426,7 @@ void MaCaco_subscribe_record(U16 addr, U8 funcode, U16 putin, U8 startoffset, U8
 	{
 		subscr_addr[i]  = addr;
 		subscr_funcode[i] = funcode;
-		subscr_putin[i] = (U8*)putin;
+		subscr_putin[i] = putin;
 		subscr_startoffset[i] = startoffset;
 		subscr_numberof[i] = numberof;
 	}
@@ -1456,7 +1459,7 @@ U8 MaCaco_getfuncode()
 /**************************************************************************/
 U16 MaCaco_getputin()
 {
-	return (U16)MaCaco_rx.putin;
+	return MaCaco_rx.putin;
 }
 
 /**************************************************************************/
@@ -1497,7 +1500,7 @@ U8 MaCaco_getdatain()
 /**************************************************************************/
 U16 MaCaco_getdatabuffer()
 {
-	return (U16)(&MaCaco_data[0]);
+	return 0;//(U16)(&MaCaco_data[0]);
 }
 
 /**************************************************************************/

@@ -195,9 +195,9 @@
 */
 /**************************************************************************/
 #ifndef IPCONFIG_INSKETCH
-uint8_t DEFAULT_BASEIPADDRESS[] = {192, 168, 1, 0};
+uint8_t DEFAULT_BASEIPADDRESS[] = {192, 168, 0, 0};
 uint8_t DEFAULT_SUBMASK[] 	  = {255, 255, 255, 0};
-uint8_t DEFAULT_GATEWAY[] 	  = {192, 168, 1, 1};
+uint8_t DEFAULT_GATEWAY[] 	  = {192, 168, 0, 1};
 #endif
 
 /**************************************************************************/

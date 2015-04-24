@@ -373,7 +373,7 @@ const int MaCaco_funcode[MaCaco_FUNCODE_NO] = {0x01, 0x11, 0x02, 0x12,
 */
 /**************************************************************************/
 #ifndef	MaCaco_DEBUG_INSKETCH
-#	define MaCaco_DEBUG  		0
+#	define MaCaco_DEBUG  		1
 #endif
 
 /**************************************************************************/

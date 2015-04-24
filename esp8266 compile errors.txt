@@ -1,0 +1,217 @@
+Arduino: 1.6.1 (Windows 7), Board: "Generic ESP8266 board"
+
+WARNING: library souliss claims to run on [avr] architecture(s) and may be incompatible with your current board which runs on [esp8266] architecture(s).
+
+
+
+In file included from e01_Curtains_gateway.ino:27:0:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/bconf/ESP8266.h:43:0: warning: "BOARD_MODEL" redefined [enabled by default]
+
+ #define BOARD_MODEL     0x00
+
+ ^
+
+In file included from e01_Curtains_gateway.ino:26:0:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/bconf/StandardArduino.h:29:0: note: this is the location of the previous definition
+
+ #define BOARD_MODEL   0x02
+
+ ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/GetConfig.h:32:0,
+
+                 from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:38,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/conf/chibi/chibiUsrCfg.h:187:41: warning: backslash and newline separated by space [enabled by default]
+
+             }                           \ 
+
+ ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:156:0,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/SpeakEasy.h:329:0: warning: "ResetTrigger" redefined [enabled by default]
+
+ #define ResetTrigger()    data_changed=0; 
+
+ ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/SpeakEasy.h:219:0: note: this is the location of the previous definition
+
+ #define ResetTrigger()  (data_changed=0)
+
+ ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:117:0,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'U8 MaCaco_parse(MaCaco_rx_data_t*)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:179:37: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+  rx->putin = (U8 *)(*(U16 *)data_ptr); // Put in...
+
+                                     ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'U8 MaCaco_send(U16, U8, U8*, U8, U8, U8*)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:225:28: error: cast from 'U8* {aka unsigned char*}' to 'U16 {aka short unsigned int}' loses precision [-fpermissive]
+
+  *(U16 *)frame_pnt = (U16) putin;
+
+                            ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:117:0,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'U8 MaCacoUserMode_send(U16, U8, U8*, U8, U8, U8, U8, U8*, U8*)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:270:28: error: cast from 'U8* {aka unsigned char*}' to 'U16 {aka short unsigned int}' loses precision [-fpermissive]
+
+  *(U16 *)frame_pnt = (U16) putin;
+
+                            ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'U8 MaCaco_peruse(U16, MaCaco_rx_data_t*, U8*)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:514:31: error: cast from 'U8* {aka unsigned char*}' to 'U16 {aka short unsigned int}' loses precision [-fpermissive]
+
+   if (randomkeyid == (U16)rx->putin) // identify the node from the keyval
+
+                               ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:796:43: error: cast from 'U8* {aka unsigned char*}' to 'U16 {aka short unsigned int}' loses precision [-fpermissive]
+
+     (*(U16 *)confparameters_p) = (U16)rx->putin;
+
+                                           ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'void MaCaco_subscribe_record(U16, U8, U16, U8, U8)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:1426:26: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+   subscr_putin[i] = (U8*)putin;
+
+                          ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'U16 MaCaco_getputin()':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:1459:24: error: cast from 'U8* {aka unsigned char*}' to 'U16 {aka short unsigned int}' loses precision [-fpermissive]
+
+  return (U16)MaCaco_rx.putin;
+
+                        ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp: In function 'U16 MaCaco_getdatabuffer()':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/MaCaco/MaCaco.cpp:1500:30: error: cast from 'U8* {aka unsigned char*}' to 'U16 {aka short unsigned int}' loses precision [-fpermissive]
+
+  return (U16)(&MaCaco_data[0]);
+
+                              ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/vNet/vNet.cpp:59:0,
+
+                 from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:118,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/vNet/drivers/ethESP8266/vNetDriver_eth.cpp: In function 'void vNet_SetAddress_M1(uint16_t)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/vNet/drivers/ethESP8266/vNetDriver_eth.cpp:78:22: error: 'class WiFiUDP' has no member named 'localPort'
+
+   Serial.println(udp.localPort());
+
+                      ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/vNet/drivers/ethESP8266/vNetDriver_eth.cpp: In function 'uint8_t vNet_Send_M1(uint16_t, oFrame*, uint8_t)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/frame/vNet/drivers/ethESP8266/vNetDriver_eth.cpp:157:22: error: 'class WiFiUDP' has no member named 'localPort'
+
+   Serial.println(udp.localPort());
+
+                      ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:141:0,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp: In function 'U8 Souliss_BroadcastAction(U8*, U16, U8)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp:272:53: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+  return MaCaco_send(0xFFFF, MaCaco_ACTIONMSG, (U8 *)message, action, 0, 0);
+
+                                                     ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp: In function 'U8 Souliss_MulticastAction(U16, U8*, U16, U8)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp:282:61: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+  return MaCaco_send(multicast_addr, MaCaco_ACTIONMSG, (U8 *)message, action, 0, 0);
+
+                                                             ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp: In function 'U8 Souliss_BroadcastActionMessage(U8*, U16, U8, U8*, U8)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp:292:53: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+  return MaCaco_send(0xFFFF, MaCaco_ACTIONMSG, (U8 *)message, action, message_len, data);
+
+                                                     ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp: In function 'U8 Souliss_MulticastActionMessage(U16, U8*, U16, U8, U8*, U8)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/Communication.cpp:302:61: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+  return MaCaco_send(multicast_addr, MaCaco_ACTIONMSG, (U8 *)message, action, message_len, data);
+
+                                                             ^
+
+In file included from C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/Souliss.h:143:0,
+
+                 from e01_Curtains_gateway.ino:40:
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp: In function 'U8 Souliss_DynamicAddressing(U8*, const char*, U8)':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp:248:62: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+      MaCaco_send(VNET_ADDR_BRDC, MaCaco_DINADDRESSREQ, (U8 *)keyidval, proposedsubnet, 0, 0);
+
+                                                              ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp:262:60: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+    MaCaco_send(VNET_ADDR_BRDC, MaCaco_DINADDRESSREQ, (U8 *)keyidval, (0xF0 + usedmedia), 0, 0);
+
+                                                            ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp: In function 'void Souliss_JoinNetwork()':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp:283:49: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+   MaCaco_send(0xFFFF, MaCaco_JOINNETWORK, (U8 *)keyidval, 0, 0, 0);
+
+                                                 ^
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp: In function 'void Souliss_JoinAndReset()':
+
+C:\Users\Plinio\Desktop\arduino-1.6.1-esp8266\arduino-1.6.1\libraries\souliss/base/NetworkSetup.cpp:296:50: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+   MaCaco_send(0xFFFF, MaCaco_JOINANDRESET, (U8 *)keyidval, 0, 0, 0);
+
+                                                  ^
+
+Error compiling.
+
+  This report would have more information with
+  "Show verbose output during compilation"
+  enabled in File > Preferences.
