@@ -1,29 +1,19 @@
-# souliss
-*Arduino based Distributed Networking Framework for Smart Homes and IoT*
+# souliss on ESP8266
 
+This is just a test branch, used to compile and load Souliss directly on the ESP8266 module. Isn't coded in the proper way, it doesn't init the internal vNet stack properly.
 
-Souliss is a framework to manage interconnected Things, smart homes and automated appliances. It includes a network layer that gives virtualization over the communication media, an event based protocol and datastructure and an Android user interface.
-It runs over *AVR, Arduino (and compatible) and Android*. it includes all the code and drivers to get started, you just have to tune it to your needs and load it.
+It show how to get the following:
+- Compile Souliss for ESP8266
+- Send and Receive UDP unicast and broadcast
 
-##How it works
+There are some tricks to let Souliss run on ESP, first all **putin** shall be rewritten in order to do no longer have dependecy on microcontroller addressing space, this means just turn them into relative references. The **putin** wasn't longer used in latest passthrough mode, so this modification isn't much hard and should not affect AVR based nodes.
 
-The concept behind **distributed** is to have nodes that can interact directly, without a central device used as data collector. _Souliss_ is built over a *peer-to-peer network layer* that has virtualization facilities; it basically merges networks build over different communication medias and controllers, with automatic bridging and routing. The final user doesn't need to care about networking almost at all.
+There are some operation with pointers that are not fine with ESP8266
+- The ESP8266 is little endian as AVR, so no need to reverse high and low bytes
+- The ESP8266 doesn't like *(uint16_t*) operation at all, if you have a uint8_t* array and are trying to read an even address as 16bits, then the microcontroller hangs. The address assignment is not known at code time, so all operation shall be changed using an external temporary variable and reading the bytes one by and one, to be written inside the temporary variable.
+- The ESP8266 has a watchdog enable by default, you can pat the dog using: delay(0), yeld() or specific defined calls.
 
-Nodes communication is achieved using an **event-based and stateless protocol** to have quick responses also on low bandwidth devices; it is a binary protocol to keep low resources usage on the microcontroller side.
-Network and data communication is hidden at the user level, where is just required to fill-in network addresses and initialize the back-end once. Every node runs its own logic so, in case of failure, basic functionality are *still available*, data can be shared and eventual logics and input/output data can also be shared over.
+The Arduino IDE for ESP8266 workgroup doesn't have a continuous integration system, so the IDE that you can download as compiled code is generally old than the last source code available, the Windows one hasn't all the watchdog handling.
+So, is required to download the IDE and the source code, then replace in hardware/ the core for esp8266 and the relevant sdk (in folder tools).
 
-![](https://lh3.googleusercontent.com/-kRMZdBxN1H0/UX2iDCxVHPI/AAAAAAAAARw/kutVZ8TrDJ0/s800/Souliss%2520Overview.png)
-
-##User Interaction
-
-User interaction is based on a single (or multiple) collector node, that gets data from all the nodes and provides a full state of your controlled objects. This approach brings easy interaction over internet, having a single node to be accessed. There is no restriction in direct access of other nodes, even if this is not the standard way in case of user interaction.
-The main user interface is *!SoulissApp for Android*, in this way the smartphone or tablet can become a Souliss node and it is able to communicate with nodes directly, using the same event-based protocol used by the AVR boards. 
-You can interact with external user interface by means of Interfaces, piece of code that runs on your board as source of data, as example you can integrate Souliss with openHAB using the [HTTP/XML Interface](openHAB Binding)
-
-
-![](https://lh4.googleusercontent.com/-PSEZxGoDcgg/UVDGh5vA05I/AAAAAAAAAN0/MqxCSGceIJc/w220-h367-no/Screenshot_2013-03-25-22-45-15.png) 
-![](https://lh4.googleusercontent.com/-nQo-SRuYFOw/Ue3IhgWw33I/AAAAAAAAAVs/kyFEE0RjT48/w220-h367-no/Screenshot_2013-07-08-01-52-41.png) 
-![](https://lh4.googleusercontent.com/-vrlbcY4uiCU/Ue3IiPGGvyI/AAAAAAAAAV4/YDXT9b_bC5c/w220-h367-no/Screenshot_2013-07-23-01-53-19.png)
-
-
-Have a look to the [Wiki](https://github.com/souliss/souliss/wiki) and relative examples. Please notify us of any bug you may encounter on [Community](https://github.com/souliss/souliss/wiki/Community) or on [Issues](https://github.com/souliss/souliss/issues) section.
+These notes and the code here is a useful starting point to port correctly Souliss and get it working on ESP8266.
