@@ -1,0 +1,12 @@
+1) The putin is a pointer transferred to other nodes as echo, different architectures with different addressing space cause problem
+this shall be now a relative addressing and no longer an absolute addressing.
+In latest release, putin is basically no longer used while transferring data in passtrough.
+
+1a) The ESP doesn't like if a uint8_t pointer is addressed as uint16_t with even values! This include also
+the memory_map pointer value.
+
+2) The ESP has a background activities, this process wifi, IP stack and watchdog. A periodic call call to delay(0) or yeld()
+is required to run the background activities.
+Actually once inside the FAST loop, the wdt didn't get a reset in time 
+
+3) The pre-compiled Arduino IDE for ESP8266 doesn't contains the latest cores.

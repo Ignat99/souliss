@@ -176,7 +176,8 @@ U8 MaCaco_parse(MaCaco_rx_data_t *rx)
 	func = rx->funcode;
 	
 	// Read the value as 16 bit and convert it to pointer for an 8 bit variable
-	rx->putin = *(U16*)data_ptr;	// Put in...
+	Serial.println("uh");
+	rx->putin = *data_ptr+(*(data_ptr+1)<<8);//*(U16*)data_ptr;	// Put in...
 	data_ptr += sizeof(U16);
 	
 	rx->startoffset = *data_ptr++;			// Start offset
@@ -901,7 +902,9 @@ U8 MaCaco_peruse(U16 addr, MaCaco_rx_data_t *rx, U8 *memory_map)
 			U8 nodeindex;
 			for(nodeindex=MaCaco_LOCNODE+1; nodeindex<MaCaco_NODES ; nodeindex++)
 			{
-				if(addr == (*(U16*)(memory_map+MaCaco_ADDRESSES_s+2*nodeindex)))
+				uint16_t maddr= (*(memory_map+MaCaco_ADDRESSES_s+2*nodeindex)) + (*(memory_map+MaCaco_ADDRESSES_s+2*nodeindex+1) << 8);
+
+				if(addr == maddr)
 				{
 					lasttyp_addr = addr;	// Store the address of the nodes that gives this reply
 					break;
@@ -951,10 +954,12 @@ U8 MaCaco_peruse(U16 addr, MaCaco_rx_data_t *rx, U8 *memory_map)
 			// This flag data subscribed by us as passtrough, shall be redirected to the User Interface
 			if (rx->putin == 0)		
 			{
+				uint16_t maddr= (*(memory_map+MaCaco_ADDRESSES_s+2*nodeindex)) + (*(memory_map+MaCaco_ADDRESSES_s+2*nodeindex+1) << 8);
+
 				// Identify the node index
 				U8 nodeindex;
 				for(nodeindex=1; nodeindex<MaCaco_NODES ; nodeindex++)
-					if(addr == (*(U16*)(memory_map+MaCaco_ADDRESSES_s+2*nodeindex)))
+					if(addr == maddr)
 						break;
 
 				#if(MaCaco_PERSISTANCE)		// PERSISTENCE is active, store information

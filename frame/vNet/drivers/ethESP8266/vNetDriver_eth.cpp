@@ -87,6 +87,7 @@ void vNet_SetAddress_M1(uint16_t addr)
 /**************************************************************************/
 uint8_t vNet_Send_M1(uint16_t addr, oFrame *frame, uint8_t len)
 {
+Serial.println("vNet_Send_M1");
 
 	uint8_t ip_addr[4];
 	uint16_t vNet_port;
@@ -185,6 +186,8 @@ uint8_t vNet_DataSize_M1()
 /**************************************************************************/
 uint8_t vNet_DataAvailable_M1()
 {
+//Serial.println("vNet_DataAvailable_M1");
+
 	// Get the incoming length
 	dataframe.len = udp.parsePacket();
 	//Serial.print(dataframe.len);
@@ -207,6 +210,7 @@ uint8_t vNet_DataAvailable_M1()
 /**************************************************************************/
 uint8_t vNet_RetrieveData_M1(uint8_t *data)
 {
+Serial.println("vNet_RetrieveData_M1");
 
 	uint8_t *data_pnt, d_addr[4];
 	uint16_t d_port=0;
@@ -233,11 +237,15 @@ uint8_t vNet_RetrieveData_M1(uint8_t *data)
 	}
 	// Verify the incoming address, is a not conventional procedure at this layer
 	// but is required to record the IP address in case of User Mode addresses
+
 	
 	#if(UMODE_ENABLE)
-	if(((*(U16*)&data_pnt[5]) & 0xFF00) != 0x0000)
-		UserMode_Record((*(U16*)&data_pnt[5]), dataframe.ip, (uint8_t *)(&dataframe.port));	
+	uint16_t maddr= (*(data_pnt+5)) + (*(data_pnt+5+1) << 8);
+
+	if((maddr & 0xFF00) != 0x0000)
+		UserMode_Record(maddr, dataframe.ip, (uint8_t *)(&dataframe.port));	
 	#endif
+
 	
 	// Remove the header
 	data_pnt++;
@@ -254,6 +262,8 @@ uint8_t vNet_RetrieveData_M1(uint8_t *data)
 /**************************************************************************/
 uint16_t vNet_GetSourceAddress_M1()
 {
+Serial.println("vNet_GetSourceAddress_M1");
+
 	uint16_t addr;
 	
 	// Address translation	
@@ -269,6 +279,7 @@ uint16_t vNet_GetSourceAddress_M1()
 /**************************************************************************/
 void eth_vNettoIP(const uint16_t addr, uint8_t *ip_addr)
 {
+Serial.println("eth_vNettoIP");
 	
 	uint8_t *vNet_addr;
 	vNet_addr = (uint8_t *)&addr;
@@ -287,6 +298,8 @@ void eth_vNettoIP(const uint16_t addr, uint8_t *ip_addr)
 /**************************************************************************/
 void eth_IPtovNet(uint16_t *addr, const uint8_t *ip_addr)
 {
+Serial.println("eth_IPtovNet");
+
 	uint8_t *vNet_addr;
 	vNet_addr = (uint8_t *)addr;
 	
@@ -302,6 +315,8 @@ void eth_IPtovNet(uint16_t *addr, const uint8_t *ip_addr)
 /**************************************************************************/
 void eth_SetBaseIP(uint8_t *ip_addr)
 {
+Serial.println("eth_SetBaseIP");
+
 	uint8_t i;
 	for(i=0;i<4;i++)
 		stack.base_ip[i] = *ip_addr++;
@@ -314,6 +329,8 @@ void eth_SetBaseIP(uint8_t *ip_addr)
 /**************************************************************************/
 void eth_SetIPAddress(uint8_t *ip_addr)
 {
+Serial.println("eth_SetIPAddress");
+
 	uint8_t i;
 	for(i=0;i<4;i++)
 		stack.ip[i] = *ip_addr++;
@@ -344,6 +361,8 @@ void eth_SetGateway(uint8_t *gateway)
 /**************************************************************************/
 void eth_GetIP(uint8_t *ip_addr)
 {
+Serial.println("eth_GetIP");
+
 	*(ip_addr+0) = stack.ip[0];
 	*(ip_addr+1) = stack.ip[1];
 	*(ip_addr+2) = stack.ip[2];
@@ -357,6 +376,8 @@ void eth_GetIP(uint8_t *ip_addr)
 /**************************************************************************/
 void eth_GetBaseIP(uint8_t *ip_addr)
 {
+Serial.println("eth_GetBaseIP");
+
 	*(ip_addr+0) = stack.base_ip[0];
 	*(ip_addr+1) = stack.base_ip[1];
 	*(ip_addr+2) = stack.base_ip[2];

@@ -69,32 +69,45 @@ U8 Souliss_CommunicationChannel(U16 addr, U8 *memory_map, U8 input_slot, U8 outp
 /**************************************************************************/	
 U8 Souliss_CommunicationChannels(U8 *memory_map)
 {
+Serial.println("Souliss_CommunicationChannels");
 	U8 ret=0;
 
 	// If not yet, setup the communication channel
 	if (*(memory_map+MaCaco_HEALTHY_s+roundrob_2) == 0)
 		*(memory_map+MaCaco_HEALTHY_s+roundrob_2) = MaCaco_SUBINITHEALTHY;
-	
+
+Serial.println("CC1");
+		
 	// Check subscription has been reset
 	if((roundrob_2 > 1) && (MaCaco_subscribe_is_init()))
 		roundrob_2=1;		// Start from first remote node
+Serial.println("CC2");
 		
 	// Handle the subscription in round robin
 	if(roundrob_2 < MaCaco_NODES)
 	{
+	uint16_t maddr= (*(memory_map+MaCaco_ADDRESSES_s+2*roundrob_2)) + (*(memory_map+MaCaco_ADDRESSES_s+2*roundrob_2+1) << 8);
+	
 		// Open and/or check one communication channel at each round
-		if (((*(U16*)(memory_map+MaCaco_ADDRESSES_s+2*roundrob_2)) != 0x0000))
-			ret = MaCaco_subscribe((*(U16*)(memory_map+MaCaco_ADDRESSES_s+2*roundrob_2)), memory_map, 0, MaCaco_OUT_s, MaCaco_SUBSCRLEN, roundrob_2);		// Use putin as zero to flag a passthrough		
-		else
+		if ((maddr != 0x0000)){
+Serial.println("CC4");
+		
+			ret = MaCaco_subscribe(maddr, memory_map, 0, MaCaco_OUT_s, MaCaco_SUBSCRLEN, roundrob_2);		// Use putin as zero to flag a passthrough		
+		Serial.println("CC5.1");
+
+		}else
 		{
+		Serial.println("CC5.2");
 			roundrob_2=1;		// Node number 0 is the local node
 			return ret;
 		}
+Serial.println("CC6");
 		
 		roundrob_2++;
 	} 
 	else
 		roundrob_2=1;	// Node number 0 is the local node 
+Serial.println("CC7");
 		
 	return ret;
 }
@@ -125,6 +138,8 @@ void Souliss_BatteryChannels(U8 *memory_map, U16 addr)
 /**************************************************************************/	
 U8 Souliss_GetTypicals(U8 *memory_map)
 { 
+Serial.println("Souliss_GetTypicals");
+
 	U8 s=MaCaco_reqtyp();
 	
 	if(s)
@@ -390,6 +405,8 @@ U8 Souliss_GetActionMessage(U8 *memory_map, U16 message, U8 action, U8* data, U8
 /**************************************************************************/
 U8 Souliss_CommunicationData(U8 *memory_map, U8 *trigger)
 {
+//Serial.println("Souliss_CommunicationData");
+
 	#if(MaCaco_SUBSCRIBERS)
 	// If not yet, init the communication channel
 	if (*(memory_map+MaCaco_HEALTHY_s+0) == 0)
